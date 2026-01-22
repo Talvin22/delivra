@@ -1,7 +1,8 @@
-package com.post_hub.iam_service.model.request.user;
+package site.delivra.application.model.request.user;
 
-import com.post_hub.iam_service.model.enums.UserSortField;
+
 import lombok.Data;
+import site.delivra.application.model.enums.UserSortField;
 
 import java.io.Serializable;
 

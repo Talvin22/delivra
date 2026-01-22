@@ -1,8 +1,8 @@
-package com.post_hub.iam_service.utils;
+package site.delivra.application.utils;
 
-import com.post_hub.iam_service.security.validation.PasswordMatchesValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
+import site.delivra.application.security.validation.PasswordMatchesValidator;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

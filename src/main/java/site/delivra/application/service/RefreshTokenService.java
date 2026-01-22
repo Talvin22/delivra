@@ -1,7 +1,8 @@
-package com.post_hub.iam_service.service;
+package site.delivra.application.service;
 
-import com.post_hub.iam_service.model.entities.RefreshToken;
-import com.post_hub.iam_service.model.entities.User;
+
+import site.delivra.application.model.entities.RefreshToken;
+import site.delivra.application.model.entities.User;
 
 public interface RefreshTokenService {
 

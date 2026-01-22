@@ -1,9 +1,5 @@
-package com.post_hub.iam_service.config;
+package site.delivra.application.config;
 
-import com.post_hub.iam_service.security.filter.JwtRequestFilter;
-import com.post_hub.iam_service.security.handler.AccessRestrictionHandler;
-import com.post_hub.iam_service.service.UserService;
-import com.post_hub.iam_service.service.model.IamServiceUserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +17,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import site.delivra.application.security.filter.JwtRequestFilter;
+import site.delivra.application.security.handler.AccessRestrictionHandler;
+import site.delivra.application.service.UserService;
+import site.delivra.application.service.model.DelivraServiceUserRole;
 
 @Configuration
 @EnableWebSecurity
@@ -55,7 +55,6 @@ public class SecurityConfig {
                         .requestMatchers(NOT_SECURED_URLS).permitAll()
 
                         .requestMatchers(get("/users/all")).hasAnyAuthority(adminAccessSecurityRoles())
-                        .requestMatchers(get("/posts/all")).hasAnyAuthority(adminAccessSecurityRoles())
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
@@ -88,8 +87,8 @@ public class SecurityConfig {
 
     private String[] adminAccessSecurityRoles() {
         return new String[]{
-                IamServiceUserRole.ADMIN.name(),
-                IamServiceUserRole.SUPER_ADMIN.name()
+                DelivraServiceUserRole.ADMIN.name(),
+                DelivraServiceUserRole.SUPER_ADMIN.name()
         };
     }
 

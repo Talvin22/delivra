@@ -1,9 +1,6 @@
 package site.delivra.application.security;
 
 
-import com.post_hub.iam_service.model.entities.Role;
-import com.post_hub.iam_service.model.entities.User;
-import com.post_hub.iam_service.service.model.AuthenticationConstants;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -11,6 +8,9 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import site.delivra.application.model.entities.Role;
+import site.delivra.application.model.entities.User;
+import site.delivra.application.service.model.AuthenticationConstants;
 
 import javax.crypto.SecretKey;
 import java.time.LocalDateTime;

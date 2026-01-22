@@ -1,19 +1,19 @@
-package com.post_hub.iam_service.utils.enum_converter;
+package site.delivra.application.utils.enum_converter;
 
-import com.post_hub.iam_service.service.model.IamServiceUserRole;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import site.delivra.application.service.model.DelivraServiceUserRole;
 
 @Converter
-public class UserRoleTypeConverter implements AttributeConverter<IamServiceUserRole, String> {
+public class UserRoleTypeConverter implements AttributeConverter<DelivraServiceUserRole, String> {
 
     @Override
-    public String convertToDatabaseColumn(IamServiceUserRole attribute) {
+    public String convertToDatabaseColumn(DelivraServiceUserRole attribute) {
         return attribute.name();
     }
 
     @Override
-    public IamServiceUserRole convertToEntityAttribute(String dbData) {
-        return IamServiceUserRole.fromName(dbData);
+    public DelivraServiceUserRole convertToEntityAttribute(String dbData) {
+        return DelivraServiceUserRole.fromName(dbData);
     }
 }

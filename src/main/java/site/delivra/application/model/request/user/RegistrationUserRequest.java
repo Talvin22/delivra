@@ -1,4 +1,4 @@
-package com.post_hub.iam_service.model.request.user;
+package site.delivra.application.model.request.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

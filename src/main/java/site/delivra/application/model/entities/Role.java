@@ -1,12 +1,13 @@
-package com.post_hub.iam_service.model.entities;
+package site.delivra.application.model.entities;
 
-import com.post_hub.iam_service.service.model.IamServiceUserRole;
-import com.post_hub.iam_service.utils.enum_converter.UserRoleTypeConverter;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import site.delivra.application.service.model.DelivraServiceUserRole;
+import site.delivra.application.utils.enum_converter.UserRoleTypeConverter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -27,7 +28,7 @@ public class Role {
 
     @Column(name = "user_system_role", nullable = false)
     @Convert(converter = UserRoleTypeConverter.class)
-    private IamServiceUserRole userSystemRole;
+    private DelivraServiceUserRole userSystemRole;
 
     @Column()
     private boolean active;

@@ -1,7 +1,6 @@
-package com.post_hub.iam_service.repository.criteria;
+package site.delivra.application.repository.criteria;
 
-import com.post_hub.iam_service.model.entities.User;
-import com.post_hub.iam_service.model.request.user.UserSearchRequest;
+
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -9,10 +8,15 @@ import jakarta.persistence.criteria.Root;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.springframework.data.jpa.domain.Specification;
+import site.delivra.application.model.entities.User;
+import site.delivra.application.model.request.user.UserSearchRequest;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static site.delivra.application.model.enums.UserSortField.EMAIL;
+import static site.delivra.application.model.enums.UserSortField.USERNAME;
 
 @AllArgsConstructor
 public class UserSearchCriteria implements Specification<User> {

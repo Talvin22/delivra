@@ -1,14 +1,13 @@
-package com.post_hub.iam_service.utils;
+package site.delivra.application.utils;
 
-import com.post_hub.iam_service.model.constants.ApiConstants;
-
-import com.post_hub.iam_service.security.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import site.delivra.application.model.constants.ApiConstants;
+import site.delivra.application.security.JwtTokenProvider;
 
 import java.util.UUID;
 

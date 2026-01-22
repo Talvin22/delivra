@@ -1,10 +1,9 @@
-package com.post_hub.iam_service.model.dto.user;
+package site.delivra.application.model.dto.user;
 
-import com.post_hub.iam_service.model.dto.role.RoleDTO;
-import com.post_hub.iam_service.model.enums.RegistrationStatus;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import site.delivra.application.model.dto.role.RoleDTO;
+import site.delivra.application.model.enums.RegistrationStatus;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

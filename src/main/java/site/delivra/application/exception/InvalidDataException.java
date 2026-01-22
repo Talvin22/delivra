@@ -1,4 +1,4 @@
-package com.post_hub.iam_service.model.exception;
+package site.delivra.application.exception;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

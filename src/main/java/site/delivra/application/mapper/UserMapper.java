@@ -1,19 +1,19 @@
-package com.post_hub.iam_service.mapper;
+package site.delivra.application.mapper;
 
-import com.post_hub.iam_service.model.dto.role.RoleDTO;
-import com.post_hub.iam_service.model.dto.user.UserDTO;
-import com.post_hub.iam_service.model.dto.user.UserProfileDTO;
-import com.post_hub.iam_service.model.dto.user.UserSearchDTO;
-import com.post_hub.iam_service.model.entities.Role;
-import com.post_hub.iam_service.model.entities.User;
-import com.post_hub.iam_service.model.enums.RegistrationStatus;
-import com.post_hub.iam_service.model.request.user.NewUserRequest;
-import com.post_hub.iam_service.model.request.user.RegistrationUserRequest;
-import com.post_hub.iam_service.model.request.user.UpdateUserRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import site.delivra.application.model.dto.role.RoleDTO;
+import site.delivra.application.model.dto.user.UserDTO;
+import site.delivra.application.model.dto.user.UserProfileDTO;
+import site.delivra.application.model.dto.user.UserSearchDTO;
+import site.delivra.application.model.entities.Role;
+import site.delivra.application.model.entities.User;
+import site.delivra.application.model.enums.RegistrationStatus;
+import site.delivra.application.model.request.user.NewUserRequest;
+import site.delivra.application.model.request.user.RegistrationUserRequest;
+import site.delivra.application.model.request.user.UpdateUserRequest;
 
 import java.util.Collection;
 import java.util.List;

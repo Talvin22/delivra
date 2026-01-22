@@ -1,15 +1,16 @@
-package com.post_hub.iam_service.service;
+package site.delivra.application.service;
 
-import com.post_hub.iam_service.model.request.user.LoginRequest;
-import com.post_hub.iam_service.model.dto.user.UserProfileDTO;
-import com.post_hub.iam_service.model.request.user.RegistrationUserRequest;
-import com.post_hub.iam_service.model.response.IamResponse;
+
+import site.delivra.application.model.dto.user.UserProfileDTO;
+import site.delivra.application.model.request.user.LoginRequest;
+import site.delivra.application.model.request.user.RegistrationUserRequest;
+import site.delivra.application.model.response.DelivraResponse;
 
 public interface AuthService {
 
-    IamResponse<UserProfileDTO> login(LoginRequest loginRequest);
+    DelivraResponse<UserProfileDTO> login(LoginRequest loginRequest);
 
-    IamResponse<UserProfileDTO> refreshAccessToken(String refreshToken);
+    DelivraResponse<UserProfileDTO> refreshAccessToken(String refreshToken);
 
-    IamResponse<UserProfileDTO> register(RegistrationUserRequest registrationUserRequest);
+    DelivraResponse<UserProfileDTO> register(RegistrationUserRequest registrationUserRequest);
 }

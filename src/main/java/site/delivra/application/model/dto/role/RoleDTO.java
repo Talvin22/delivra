@@ -1,4 +1,4 @@
-package com.post_hub.iam_service.model.dto.role;
+package site.delivra.application.model.dto.role;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

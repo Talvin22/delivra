@@ -1,9 +1,9 @@
 package site.delivra.application.security.validation;
 
-import com.post_hub.iam_service.model.request.user.RegistrationUserRequest;
-import com.post_hub.iam_service.utils.PasswordMatches;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import site.delivra.application.model.request.user.RegistrationUserRequest;
+import site.delivra.application.utils.PasswordMatches;
 
 public class PasswordMatchesValidator implements ConstraintValidator<PasswordMatches, RegistrationUserRequest> {
 

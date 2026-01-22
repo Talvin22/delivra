@@ -1,11 +1,11 @@
-package com.post_hub.iam_service.service.model;
+package site.delivra.application.service.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum IamServiceUserRole {
+public enum DelivraServiceUserRole {
 
     USER("USER"),
     ADMIN("ADMIN"),
@@ -13,8 +13,8 @@ public enum IamServiceUserRole {
 
     private final String role;
 
-    public static IamServiceUserRole fromName(String name) {
-        return IamServiceUserRole.valueOf(name);
+    public static DelivraServiceUserRole fromName(String name) {
+        return DelivraServiceUserRole.valueOf(name);
     }
 
 

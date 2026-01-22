@@ -1,25 +1,5 @@
-package com.post_hub.iam_service.service.impl;
+package site.delivra.application.service.impl;
 
-import com.post_hub.iam_service.kafka.service.KafkaMessageService;
-import com.post_hub.iam_service.mapper.UserMapper;
-import com.post_hub.iam_service.model.constants.ApiErrorMessage;
-import com.post_hub.iam_service.model.dto.user.UserDTO;
-import com.post_hub.iam_service.model.dto.user.UserSearchDTO;
-import com.post_hub.iam_service.model.entities.Role;
-import com.post_hub.iam_service.model.entities.User;
-import com.post_hub.iam_service.model.exception.DataExistException;
-import com.post_hub.iam_service.model.exception.NotFoundException;
-import com.post_hub.iam_service.model.request.user.NewUserRequest;
-import com.post_hub.iam_service.model.request.user.UpdateUserRequest;
-import com.post_hub.iam_service.model.request.user.UserSearchRequest;
-import com.post_hub.iam_service.model.response.IamResponse;
-import com.post_hub.iam_service.model.response.PaginationResponse;
-import com.post_hub.iam_service.repository.RoleRepository;
-import com.post_hub.iam_service.repository.UserRepository;
-import com.post_hub.iam_service.repository.criteria.UserSearchCriteria;
-import com.post_hub.iam_service.security.validation.AccessValidator;
-import com.post_hub.iam_service.service.UserService;
-import com.post_hub.iam_service.service.model.IamServiceUserRole;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,6 +10,25 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import site.delivra.application.exception.DataExistException;
+import site.delivra.application.exception.NotFoundException;
+import site.delivra.application.mapper.UserMapper;
+import site.delivra.application.model.constants.ApiErrorMessage;
+import site.delivra.application.model.dto.user.UserDTO;
+import site.delivra.application.model.dto.user.UserSearchDTO;
+import site.delivra.application.model.entities.Role;
+import site.delivra.application.model.entities.User;
+import site.delivra.application.model.request.user.NewUserRequest;
+import site.delivra.application.model.request.user.UpdateUserRequest;
+import site.delivra.application.model.request.user.UserSearchRequest;
+import site.delivra.application.model.response.DelivraResponse;
+import site.delivra.application.model.response.PaginationResponse;
+import site.delivra.application.repository.RoleRepository;
+import site.delivra.application.repository.UserRepository;
+import site.delivra.application.repository.criteria.UserSearchCriteria;
+import site.delivra.application.security.validation.AccessValidator;
+import site.delivra.application.service.UserService;
+import site.delivra.application.service.model.DelivraServiceUserRole;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -44,19 +43,18 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final AccessValidator accessValidator;
-    private final KafkaMessageService kafkaMessageService;
 
     @Override
-    public IamResponse<UserDTO> getById(@NotNull Integer id) {
+    public DelivraResponse<UserDTO> getById(@NotNull Integer id) {
         User userById = userRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(id)));
         UserDTO dto = userMapper.toDto(userById);
 
-        return IamResponse.createSuccessful(dto);
+        return DelivraResponse.createSuccessful(dto);
     }
 
     @Override
-    public IamResponse<UserDTO> createUser(@NotNull NewUserRequest newUserRequest) {
+    public DelivraResponse<UserDTO> createUser(@NotNull NewUserRequest newUserRequest) {
         if (userRepository.existsByUsername(newUserRequest.getUsername())) {
             throw new DataExistException(ApiErrorMessage.USERNAME_ALREADY_EXISTS.getMessage(newUserRequest.getUsername()));
         }
@@ -65,7 +63,7 @@ public class UserServiceImpl implements UserService {
             throw new DataExistException(ApiErrorMessage.EMAIL_ALREADY_EXISTS.getMessage(newUserRequest.getEmail()));
         }
 
-        Role role = roleRepository.findByName(IamServiceUserRole.USER.getRole())
+        Role role = roleRepository.findByName(DelivraServiceUserRole.USER.getRole())
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_ROLE_NOT_FOUND.getMessage()));
 
         User user = userMapper.createUser(newUserRequest);
@@ -77,13 +75,12 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
         UserDTO dto = userMapper.toDto(savedUser);
 
-        kafkaMessageService.sendUserCreatedMessage(user.getId(), user.getUsername());
-        return IamResponse.createSuccessful(dto);
+        return DelivraResponse.createSuccessful(dto);
 
     }
 
     @Override
-    public IamResponse<UserDTO> updateUserById(@NotNull Integer userId, UpdateUserRequest request) {
+    public DelivraResponse<UserDTO> updateUserById(@NotNull Integer userId, UpdateUserRequest request) {
        User user = userRepository.findByIdAndDeletedFalse(userId)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
 
@@ -102,8 +99,7 @@ public class UserServiceImpl implements UserService {
        user = userRepository.save(user);
        UserDTO dto = userMapper.toDto(user);
 
-       kafkaMessageService.sendUserUpdatedMessage(user.getId(), user.getUsername());
-       return IamResponse.createSuccessful(dto);
+       return DelivraResponse.createSuccessful(dto);
     }
 
     @Override
@@ -114,13 +110,12 @@ public class UserServiceImpl implements UserService {
         accessValidator.validateAdminOrOwnerAccess(user.getId());
 
         user.setDeleted(true);
-        kafkaMessageService.sendUserDeletedMessage(user.getId(), user.getUsername());
         userRepository.save(user);
 
     }
 
     @Override
-    public IamResponse<PaginationResponse<UserSearchDTO>> findAllUsers(Pageable pageable) {
+    public DelivraResponse<PaginationResponse<UserSearchDTO>> findAllUsers(Pageable pageable) {
         Page<UserSearchDTO> users = userRepository.findAll(pageable)
                 .map(userMapper::toUserSearchDTO);
 
@@ -133,11 +128,11 @@ public class UserServiceImpl implements UserService {
                         users.getTotalPages()
                 )
         );
-        return IamResponse.createSuccessful(response);
+        return DelivraResponse.createSuccessful(response);
     }
 
     @Override
-    public IamResponse<PaginationResponse<UserSearchDTO>> searchUsers(UserSearchRequest userSearchRequest, Pageable pageable) {
+    public DelivraResponse<PaginationResponse<UserSearchDTO>> searchUsers(UserSearchRequest userSearchRequest, Pageable pageable) {
         Specification<User> specification = new UserSearchCriteria(userSearchRequest);
 
         Page<UserSearchDTO> usersPage = userRepository.findAll(specification, pageable)
@@ -153,7 +148,7 @@ public class UserServiceImpl implements UserService {
                         .build())
                 .build();
 
-        return IamResponse.createSuccessful(response);
+        return DelivraResponse.createSuccessful(response);
     }
 
 

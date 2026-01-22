@@ -1,4 +1,4 @@
-package com.post_hub.iam_service.model.entities;
+package site.delivra.application.model.entities;
 
 
 import jakarta.persistence.*;

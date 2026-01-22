@@ -1,4 +1,4 @@
-package com.post_hub.iam_service.model.enums;
+package site.delivra.application.model.enums;
 
 public enum UserSortField {
     USERNAME,

@@ -1,18 +1,15 @@
-package com.post_hub.iam_service.service.impl;
+package site.delivra.application.service.impl;
 
-import com.post_hub.iam_service.kafka.service.KafkaMessageService;
-import com.post_hub.iam_service.model.constants.ApiErrorMessage;
-import com.post_hub.iam_service.model.entities.RefreshToken;
-import com.post_hub.iam_service.model.entities.User;
-import com.post_hub.iam_service.model.exception.NotFoundException;
-import com.post_hub.iam_service.repository.RefreshTokenRepository;
-import com.post_hub.iam_service.repository.UserRepository;
-import com.post_hub.iam_service.security.JwtTokenProvider;
-import com.post_hub.iam_service.service.RefreshTokenService;
-import com.post_hub.iam_service.utils.ApiUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import site.delivra.application.exception.NotFoundException;
+import site.delivra.application.model.constants.ApiErrorMessage;
+import site.delivra.application.model.entities.RefreshToken;
+import site.delivra.application.model.entities.User;
+import site.delivra.application.repository.RefreshTokenRepository;
+import site.delivra.application.service.RefreshTokenService;
+import site.delivra.application.utils.ApiUtils;
 
 import java.time.LocalDateTime;
 
@@ -22,7 +19,6 @@ import java.time.LocalDateTime;
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final KafkaMessageService kafkaMessageService;
 
     @Override
     public RefreshToken generateOrUpdateRefreshToken(User user) {

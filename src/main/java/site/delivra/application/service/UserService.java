@@ -1,28 +1,28 @@
-package com.post_hub.iam_service.service;
+package site.delivra.application.service;
 
 
-import com.post_hub.iam_service.model.dto.user.UserDTO;
-import com.post_hub.iam_service.model.dto.user.UserSearchDTO;
-import com.post_hub.iam_service.model.request.user.NewUserRequest;
-import com.post_hub.iam_service.model.request.user.UpdateUserRequest;
-import com.post_hub.iam_service.model.request.user.UserSearchRequest;
-import com.post_hub.iam_service.model.response.IamResponse;
-import com.post_hub.iam_service.model.response.PaginationResponse;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import site.delivra.application.model.dto.user.UserDTO;
+import site.delivra.application.model.dto.user.UserSearchDTO;
+import site.delivra.application.model.request.user.NewUserRequest;
+import site.delivra.application.model.request.user.UpdateUserRequest;
+import site.delivra.application.model.request.user.UserSearchRequest;
+import site.delivra.application.model.response.DelivraResponse;
+import site.delivra.application.model.response.PaginationResponse;
 
 public interface UserService extends UserDetailsService {
 
-    IamResponse<UserDTO> getById(@NotNull Integer id);
+    DelivraResponse<UserDTO> getById(@NotNull Integer id);
 
-    IamResponse<UserDTO> createUser(@NotNull NewUserRequest newUserRequest);
+    DelivraResponse<UserDTO> createUser(@NotNull NewUserRequest newUserRequest);
 
-    IamResponse<UserDTO> updateUserById(@NotNull Integer userId, UpdateUserRequest updateUserRequest);
+    DelivraResponse<UserDTO> updateUserById(@NotNull Integer userId, UpdateUserRequest updateUserRequest);
 
     void softDeleteUser(@NotNull Integer id);
 
-    IamResponse<PaginationResponse<UserSearchDTO>> findAllUsers(Pageable pageable);
+    DelivraResponse<PaginationResponse<UserSearchDTO>> findAllUsers(Pageable pageable);
 
-    IamResponse<PaginationResponse<UserSearchDTO>> searchUsers(UserSearchRequest userSerachRequest, Pageable pageable);
+    DelivraResponse<PaginationResponse<UserSearchDTO>> searchUsers(UserSearchRequest userSerachRequest, Pageable pageable);
 }

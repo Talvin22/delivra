@@ -1,8 +1,8 @@
-package com.post_hub.iam_service.utils;
+package site.delivra.application.utils;
 
-import com.post_hub.iam_service.model.constants.ApiConstants;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import site.delivra.application.model.constants.ApiConstants;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PasswordUtils {

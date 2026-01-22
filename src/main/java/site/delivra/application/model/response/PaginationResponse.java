@@ -1,4 +1,4 @@
-package com.post_hub.iam_service.model.response;
+package site.delivra.application.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

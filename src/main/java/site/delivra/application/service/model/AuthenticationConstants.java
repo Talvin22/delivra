@@ -1,4 +1,4 @@
-package com.post_hub.iam_service.service.model;
+package site.delivra.application.service.model;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

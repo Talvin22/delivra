@@ -1,27 +1,5 @@
-package com.post_hub.iam_service.service.impl;
+package site.delivra.application.service.impl;
 
-import com.post_hub.iam_service.kafka.service.KafkaMessageService;
-import com.post_hub.iam_service.mapper.UserMapper;
-import com.post_hub.iam_service.model.constants.ApiErrorMessage;
-import com.post_hub.iam_service.model.entities.Role;
-import com.post_hub.iam_service.model.exception.DataExistException;
-import com.post_hub.iam_service.model.exception.InvalidPasswordException;
-import com.post_hub.iam_service.model.exception.NotFoundException;
-import com.post_hub.iam_service.model.request.user.LoginRequest;
-import com.post_hub.iam_service.model.dto.user.UserProfileDTO;
-import com.post_hub.iam_service.model.entities.RefreshToken;
-import com.post_hub.iam_service.model.entities.User;
-import com.post_hub.iam_service.model.exception.InvalidDataException;
-import com.post_hub.iam_service.model.request.user.RegistrationUserRequest;
-import com.post_hub.iam_service.model.response.IamResponse;
-import com.post_hub.iam_service.repository.RoleRepository;
-import com.post_hub.iam_service.repository.UserRepository;
-import com.post_hub.iam_service.security.JwtTokenProvider;
-import com.post_hub.iam_service.security.validation.AccessValidator;
-import com.post_hub.iam_service.service.AuthService;
-import com.post_hub.iam_service.service.RefreshTokenService;
-import com.post_hub.iam_service.service.model.IamServiceUserRole;
-import com.post_hub.iam_service.utils.PasswordUtils;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +8,24 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import site.delivra.application.exception.InvalidDataException;
+import site.delivra.application.exception.NotFoundException;
+import site.delivra.application.mapper.UserMapper;
+import site.delivra.application.model.constants.ApiErrorMessage;
+import site.delivra.application.model.dto.user.UserProfileDTO;
+import site.delivra.application.model.entities.RefreshToken;
+import site.delivra.application.model.entities.Role;
+import site.delivra.application.model.entities.User;
+import site.delivra.application.model.request.user.LoginRequest;
+import site.delivra.application.model.request.user.RegistrationUserRequest;
+import site.delivra.application.model.response.DelivraResponse;
+import site.delivra.application.repository.RoleRepository;
+import site.delivra.application.repository.UserRepository;
+import site.delivra.application.security.JwtTokenProvider;
+import site.delivra.application.security.validation.AccessValidator;
+import site.delivra.application.service.AuthService;
+import site.delivra.application.service.RefreshTokenService;
+import site.delivra.application.service.model.DelivraServiceUserRole;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -46,10 +42,9 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccessValidator accessValidator;
-    private final KafkaMessageService kafkaMessageService;
 
     @Override
-    public IamResponse<UserProfileDTO> login(@NotNull LoginRequest loginRequest) {
+    public DelivraResponse<UserProfileDTO> login(@NotNull LoginRequest loginRequest) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
@@ -67,24 +62,24 @@ public class AuthServiceImpl implements AuthService {
         UserProfileDTO userProfileDTO = userMapper.toUserProfileDto(user, token, refreshToken.getToken());
         userProfileDTO.setToken(token);
 
-        return IamResponse.createSuccessfulWithNewToken(userProfileDTO);
+        return DelivraResponse.createSuccessfulWithNewToken(userProfileDTO);
 
     }
 
     @Override
-    public IamResponse<UserProfileDTO> refreshAccessToken(String refreshTokenValue) {
+    public DelivraResponse<UserProfileDTO> refreshAccessToken(String refreshTokenValue) {
         RefreshToken refreshToken = refreshTokenService.validateAndRefreshToken(refreshTokenValue);
         User user = refreshToken.getUser();
 
         String token = jwtTokenProvider.generateToken(user);
 
-        return IamResponse.createSuccessfulWithNewToken(userMapper.toUserProfileDto(user, token, refreshToken.getToken()));
+        return DelivraResponse.createSuccessfulWithNewToken(userMapper.toUserProfileDto(user, token, refreshToken.getToken()));
 
 
     }
 
     @Override
-    public IamResponse<UserProfileDTO> register(@NotNull RegistrationUserRequest registrationUserRequest) {
+    public DelivraResponse<UserProfileDTO> register(@NotNull RegistrationUserRequest registrationUserRequest) {
 
         accessValidator.validateNewUser(
                 registrationUserRequest.getUsername(),
@@ -93,7 +88,7 @@ public class AuthServiceImpl implements AuthService {
                 registrationUserRequest.getConfirmPassword()
         );
 
-        Role userRole = roleRepository.findByName(IamServiceUserRole.USER.getRole())
+        Role userRole = roleRepository.findByName(DelivraServiceUserRole.USER.getRole())
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_ROLE_NOT_FOUND.getMessage()));
 
         User newUser = userMapper.fromDto(registrationUserRequest);
@@ -108,7 +103,7 @@ public class AuthServiceImpl implements AuthService {
         UserProfileDTO userProfileDTO = userMapper.toUserProfileDto(newUser, token, refreshToken.getToken());
         userProfileDTO.setToken(token);
 
-        return IamResponse.createSuccessfulWithNewToken(userProfileDTO);
+        return DelivraResponse.createSuccessfulWithNewToken(userProfileDTO);
 
     }
 }

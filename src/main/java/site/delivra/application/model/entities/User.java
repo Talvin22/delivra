@@ -1,16 +1,16 @@
-package com.post_hub.iam_service.model.entities;
+package site.delivra.application.model.entities;
 
 
-import com.post_hub.iam_service.model.enums.RegistrationStatus;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import site.delivra.application.model.enums.RegistrationStatus;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -60,9 +60,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "registration_status")
     private RegistrationStatus status;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Post> posts;
 
     @ManyToMany()
     @JoinTable(

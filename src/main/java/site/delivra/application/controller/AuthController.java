@@ -1,12 +1,5 @@
-package com.post_hub.iam_service.controller;
+package site.delivra.application.controller;
 
-import com.post_hub.iam_service.model.constants.ApiLogMassage;
-import com.post_hub.iam_service.model.request.user.LoginRequest;
-import com.post_hub.iam_service.model.dto.user.UserProfileDTO;
-import com.post_hub.iam_service.model.request.user.RegistrationUserRequest;
-import com.post_hub.iam_service.model.response.IamResponse;
-import com.post_hub.iam_service.service.AuthService;
-import com.post_hub.iam_service.utils.ApiUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -14,6 +7,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import site.delivra.application.model.constants.ApiLogMassage;
+import site.delivra.application.model.dto.user.UserProfileDTO;
+import site.delivra.application.model.request.user.LoginRequest;
+import site.delivra.application.model.request.user.RegistrationUserRequest;
+import site.delivra.application.model.response.DelivraResponse;
+import site.delivra.application.service.AuthService;
+import site.delivra.application.utils.ApiUtils;
 
 @Slf4j
 @RestController
@@ -30,7 +30,7 @@ public class AuthController {
     ) {
         log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
-        IamResponse<UserProfileDTO> result = authService.login(loginRequest);
+        DelivraResponse<UserProfileDTO> result = authService.login(loginRequest);
         Cookie authorizationCookie = ApiUtils.createAuthCookie(result.getPayload().getToken());
         response.addCookie(authorizationCookie);
 
@@ -40,12 +40,12 @@ public class AuthController {
     }
 
     @GetMapping("refresh/token")
-    public ResponseEntity<IamResponse<UserProfileDTO>> refreshToken(
+    public ResponseEntity<DelivraResponse<UserProfileDTO>> refreshToken(
             @RequestParam(name = "token") String refreshToken,
             HttpServletResponse response) {
         log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
-        IamResponse<UserProfileDTO> userProfileDTOIamResponse = authService.refreshAccessToken(refreshToken);
+        DelivraResponse<UserProfileDTO> userProfileDTOIamResponse = authService.refreshAccessToken(refreshToken);
         Cookie authorizationCookie = ApiUtils.createAuthCookie(userProfileDTOIamResponse.getPayload().getToken());
         response.addCookie(authorizationCookie);
 
@@ -59,7 +59,7 @@ public class AuthController {
             HttpServletResponse response) {
 
         log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
-        IamResponse<UserProfileDTO> result= authService.register(registrationUserRequest);
+        DelivraResponse<UserProfileDTO> result= authService.register(registrationUserRequest);
         Cookie authorizationCookie = ApiUtils.createAuthCookie(result.getPayload().getToken());
         response.addCookie(authorizationCookie);
 
