@@ -88,7 +88,7 @@ public class AuthServiceImpl implements AuthService {
                 registrationUserRequest.getConfirmPassword()
         );
 
-        Role userRole = roleRepository.findByName(DelivraServiceUserRole.USER.getRole())
+        Role userRole = roleRepository.findByName(DelivraServiceUserRole.DRIVER.getRole())
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_ROLE_NOT_FOUND.getMessage()));
 
         User newUser = userMapper.fromDto(registrationUserRequest);
