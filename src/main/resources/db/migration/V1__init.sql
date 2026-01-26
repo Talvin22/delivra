@@ -44,6 +44,20 @@ CREATE TABLE refresh_token (
 
 );
 
+CREATE TABLE delivery_task(
+    id SERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_delivery_task_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 
 INSERT INTO users(username, password, email, created, updated, registration_status, last_login, deleted)
 VALUES ('super_admin', '$2a$10$rBLnOMt6NmClhVia6EfEm.fDuFvJv7hYkG5N1.ewREBUYywDOmmqy', 'super_admin@gmail.com', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ACTIVE', CURRENT_TIMESTAMP, false),
