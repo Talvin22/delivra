@@ -55,7 +55,8 @@ INSERT INTO roles (name, user_system_role, created_by)
 VALUES
                 ('SUPER_ADMIN', 'SUPER_ADMIN','SUPER_ADMIN'),
                 ('ADMIN', 'ADMIN','SUPER_ADMIN'),
-                ('DRIVER', 'DRIVER','SUPER_ADMIN');
+                ('DRIVER', 'DRIVER','SUPER_ADMIN'),
+                ('DISPATCHER', 'DISPATCHER', 'SUPER_ADMIN');
 
 
 INSERT INTO users_roles (user_id, role_id) VALUES
