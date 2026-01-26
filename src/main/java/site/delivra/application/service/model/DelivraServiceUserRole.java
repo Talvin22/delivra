@@ -8,6 +8,8 @@ import lombok.Getter;
 public enum DelivraServiceUserRole {
 
     USER("USER"),
+    DISPATCHER("DISPATCHER"),
+    DRIVER("DRIVER"),
     ADMIN("ADMIN"),
     SUPER_ADMIN("SUPER_ADMIN");
 
