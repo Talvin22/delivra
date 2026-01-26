@@ -25,7 +25,7 @@ import java.util.Objects;
 @Configuration
 @OpenAPIDefinition(
         info = @Info(
-                title = "POST_HUB REST API",
+                title = "Delivra REST API",
                 version = "1.0"
         ),
         security = {@SecurityRequirement(name = HttpHeaders.AUTHORIZATION)}
@@ -53,8 +53,8 @@ public class OpenApiConfig {
         SpringDocUtils.getConfig().addResponseTypeToIgnore(GrantedAuthority.class);
 
         return GroupedOpenApi.builder()
-                .group("iam-service")
-                .packagesToScan("com.post_hub.iam_service")
+                .group("delivra-service")
+                .packagesToScan("site.delivra.application")
                 .addOpenApiCustomizer(serverCustomizer())
                 .build();
     }
