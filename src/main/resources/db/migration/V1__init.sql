@@ -44,7 +44,7 @@ CREATE TABLE refresh_token (
 
 );
 
-CREATE TABLE delivery_task(
+CREATE TABLE delivery_tasks(
     id SERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     status VARCHAR(30) NOT NULL,

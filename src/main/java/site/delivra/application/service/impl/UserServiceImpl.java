@@ -162,7 +162,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.EMAIL_NOT_FOUND.getMessage(email)));
 
-        user.setLast_login(LocalDateTime.now());
+        user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
         return new org.springframework.security.core.userdetails.User(

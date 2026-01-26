@@ -31,7 +31,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Size(max = 30)
     @Column(length = 30, nullable = false, unique = true)
@@ -51,8 +51,8 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updated = LocalDateTime.now();
 
-    @Column()
-    private LocalDateTime last_login;
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
 
     @Column(nullable = false)
     private Boolean deleted = false;
@@ -68,6 +68,9 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Collection<Role> roles;
+
+    @OneToMany(mappedBy = "user")
+    private Collection<DeliveryTask> deliveryTasks;
 
 
 
