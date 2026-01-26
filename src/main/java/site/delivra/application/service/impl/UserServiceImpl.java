@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
             throw new DataExistException(ApiErrorMessage.EMAIL_ALREADY_EXISTS.getMessage(newUserRequest.getEmail()));
         }
 
-        Role role = roleRepository.findByName(DelivraServiceUserRole.USER.getRole())
+        Role role = roleRepository.findByName(DelivraServiceUserRole.DRIVER.getRole())
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_ROLE_NOT_FOUND.getMessage()));
 
         User user = userMapper.createUser(newUserRequest);
