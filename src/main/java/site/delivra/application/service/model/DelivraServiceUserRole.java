@@ -7,7 +7,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum DelivraServiceUserRole {
 
-    USER("USER"),
     DISPATCHER("DISPATCHER"),
     DRIVER("DRIVER"),
     ADMIN("ADMIN"),
