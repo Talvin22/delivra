@@ -50,6 +50,8 @@ public class DeliveryTask {
     @Column(nullable = false)
     private LocalDateTime updated;
 
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
 
 
 }
