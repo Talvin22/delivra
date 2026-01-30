@@ -31,7 +31,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Size(max = 30)
     @Column(length = 30, nullable = false, unique = true)

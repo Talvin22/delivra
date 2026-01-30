@@ -4,11 +4,11 @@ CREATE TABLE users
     username VARCHAR(30) NOT NULL UNIQUE,
     password VARCHAR(80) NOT NULL,
     email VARCHAR(50) UNIQUE,
-    created TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     registration_status VARCHAR(30) NOT NULL,
     last_login TIMESTAMP,
-    deleted BOOLEAN      NOT NULL default false
+    deleted BOOLEAN NOT NULL default false
 
 
 );
@@ -55,6 +55,7 @@ CREATE TABLE delivery_tasks(
     end_time TIMESTAMP NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(50) NOT NULL,
     CONSTRAINT fk_delivery_task_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 

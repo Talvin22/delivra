@@ -1,11 +1,20 @@
 package site.delivra.application.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.model.response.PaginationResponse;
+import site.delivra.application.repository.DeliveryTaskRepository;
 import site.delivra.application.service.DeliveryTaskService;
 
+@RequiredArgsConstructor
+@Service
 public class DeliveryTaskServiceImpl implements DeliveryTaskService {
+
+    private final DeliveryTaskRepository deliveryTaskRepository;
+
+
     @Override
     public DelivraResponse<DeliveryTaskDTO> getById(Integer id) {
         return null;

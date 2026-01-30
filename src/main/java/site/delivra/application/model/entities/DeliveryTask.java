@@ -50,4 +50,6 @@ public class DeliveryTask {
     @Column(nullable = false)
     private LocalDateTime updated;
 
+
+
 }
