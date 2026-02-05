@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Pageable;
 import site.delivra.application.model.dto.DeliveryTaskDTO;
 import site.delivra.application.model.request.task.NewDeliveryTaskRequest;
+import site.delivra.application.model.request.task.SearchDeliveryTaskRequest;
 import site.delivra.application.model.request.task.UpdateDeliveryTaskRequest;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.model.response.PaginationResponse;

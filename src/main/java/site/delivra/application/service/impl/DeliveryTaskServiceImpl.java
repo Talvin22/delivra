@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import site.delivra.application.model.dto.DeliveryTaskDTO;
 import site.delivra.application.model.request.task.NewDeliveryTaskRequest;
+import site.delivra.application.model.request.task.SearchDeliveryTaskRequest;
 import site.delivra.application.model.request.task.UpdateDeliveryTaskRequest;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.model.response.PaginationResponse;
@@ -16,6 +17,7 @@ import site.delivra.application.service.DeliveryTaskService;
 public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
     private final DeliveryTaskRepository deliveryTaskRepository;
+    private final DeliveryTaskMapper taskMapper;
 
 
     @Override
