@@ -3,6 +3,8 @@ package site.delivra.application.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import site.delivra.application.model.dto.DeliveryTaskDTO;
+import site.delivra.application.model.request.task.NewDeliveryTaskRequest;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.model.response.PaginationResponse;
 import site.delivra.application.repository.DeliveryTaskRepository;
