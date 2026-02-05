@@ -17,6 +17,7 @@ public enum ApiErrorMessage {
     USER_ROLE_NOT_FOUND("User role %s not found"),
     INVALID_TOKEN_SIGNATURE("Invalid token signature"),
     COMMENT_NOT_FOUND_BY_ID("Comment with ID: %s was not found"),
+    DELIVERY_NOT_FOUND_BY_ID("Delivery with ID: %s was not found"),
 
     ERROR_DURING_JWT_PROCESSING("An unexpected error occurred during JWT processing"),
     TOKEN_EXPIRED("Token expired."),
