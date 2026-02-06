@@ -5,6 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import site.delivra.application.model.enums.DeliveryTaskStatus;
 
 import java.time.LocalDateTime;
@@ -14,6 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "delivery_tasks")
 public class DeliveryTask {
 
@@ -44,13 +49,16 @@ public class DeliveryTask {
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 
-    @Column(nullable = false)
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
     private LocalDateTime created;
 
+    @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updated;
 
-    @Column(name = "created_by", nullable = false)
+    @CreatedBy
+    @Column(name = "created_by", nullable = false, updatable = false)
     private String createdBy;
 
 

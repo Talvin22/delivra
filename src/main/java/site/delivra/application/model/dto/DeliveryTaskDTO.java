@@ -45,5 +45,7 @@ public class DeliveryTaskDTO implements Serializable {
     @NotNull(message = "created by cannot be null")
     private String createdBy;
 
+    private Integer userId;
+
 
 }
