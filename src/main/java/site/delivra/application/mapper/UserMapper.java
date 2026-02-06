@@ -25,7 +25,7 @@ import java.util.List;
 )
 public interface UserMapper {
 
-    @Mapping(source = "last_login", target = "lastLogin")
+
     @Mapping(source = "status", target = "registrationStatus")
     @Mapping(target = "roles", expression = "java(mapRoles(user.getRoles()))")
     UserDTO toDto(User user);
