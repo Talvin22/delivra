@@ -36,8 +36,8 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
         DeliveryTask task = deliveryTaskRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage()));
 
-
-        return DelivraResponse.createSuccessful()
+        DeliveryTaskDTO tskDto = taskMapper.toDto(task);
+        return DelivraResponse.createSuccessful(tskDto);
     }
 
     @Override
