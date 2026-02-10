@@ -43,10 +43,10 @@ public class DeliveryTask {
     @Column()
     private Double longitude;
 
-    @Column(name = "start_time", nullable = false)
+    @Column(name = "start_time")
     private LocalDateTime startTime;
 
-    @Column(name = "end_time", nullable = false)
+    @Column(name = "end_time")
     private LocalDateTime endTime;
 
     @CreatedDate

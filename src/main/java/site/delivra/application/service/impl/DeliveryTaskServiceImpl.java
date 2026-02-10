@@ -42,7 +42,12 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
     @Override
     public DelivraResponse<DeliveryTaskDTO> createDeliveryTask(NewDeliveryTaskRequest newDeliveryTaskRequest) {
-        return null;
+        if (newDeliveryTaskRequest == null) {
+            throw new IllegalArgumentException("DeliveryTask cannot be null");
+        }
+
+        DeliveryTask task = taskMapper.
+
     }
 
     @Override
