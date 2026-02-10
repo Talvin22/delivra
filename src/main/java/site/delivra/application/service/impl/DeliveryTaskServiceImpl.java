@@ -17,6 +17,7 @@ import site.delivra.application.model.entities.User;
 import site.delivra.application.repository.DeliveryTaskRepository;
 import site.delivra.application.repository.UserRepository;
 import site.delivra.application.service.DeliveryTaskService;
+import site.delivra.application.service.model.DelivraServiceUserRole;
 
 @RequiredArgsConstructor
 @Service
@@ -51,6 +52,12 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
         User driver = userRepository.findByIdAndDeletedFalse(newDeliveryTaskRequest.getDriverId())
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(newDeliveryTaskRequest.getDriverId())));
+
+        boolean isDriver = driver.getRoles().stream()
+                .anyMatch(role -> role.getUserSystemRole() == DelivraServiceUserRole.DRIVER);
+        if (!isDriver) {
+            throw new IllegalArgumentException("User with ID: " + driver.getId() + " is not a driver");
+        }
 
         DeliveryTask task = taskMapper.createDeliveryTask(newDeliveryTaskRequest);
         task.setUser(driver);
