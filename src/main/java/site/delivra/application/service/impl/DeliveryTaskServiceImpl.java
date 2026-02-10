@@ -13,7 +13,9 @@ import site.delivra.application.model.request.task.SearchDeliveryTaskRequest;
 import site.delivra.application.model.request.task.UpdateDeliveryTaskRequest;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.model.response.PaginationResponse;
+import site.delivra.application.model.entities.User;
 import site.delivra.application.repository.DeliveryTaskRepository;
+import site.delivra.application.repository.UserRepository;
 import site.delivra.application.service.DeliveryTaskService;
 
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ import site.delivra.application.service.DeliveryTaskService;
 public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
     private final DeliveryTaskRepository deliveryTaskRepository;
+    private final UserRepository userRepository;
     private final DeliveryTaskMapper taskMapper;
 
 
@@ -46,8 +49,14 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
             throw new IllegalArgumentException("DeliveryTask cannot be null");
         }
 
-        DeliveryTask task = taskMapper.
+        User driver = userRepository.findByIdAndDeletedFalse(newDeliveryTaskRequest.getDriverId())
+                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(newDeliveryTaskRequest.getDriverId())));
 
+        DeliveryTask task = taskMapper.createDeliveryTask(newDeliveryTaskRequest);
+        task.setUser(driver);
+
+        DeliveryTask saved = deliveryTaskRepository.save(task);
+        return DelivraResponse.createSuccessful(taskMapper.toDto(saved));
     }
 
     @Override
