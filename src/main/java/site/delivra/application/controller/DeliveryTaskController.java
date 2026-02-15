@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import site.delivra.application.model.constants.ApiLogMassage;
 import site.delivra.application.model.dto.DeliveryTaskDTO;
 import site.delivra.application.model.request.task.NewDeliveryTaskRequest;
+import site.delivra.application.model.request.task.UpdateDeliveryTaskRequest;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.service.DeliveryTaskService;
 import site.delivra.application.utils.ApiUtils;
@@ -35,6 +36,16 @@ public class DeliveryTaskController {
 
         DelivraResponse<DeliveryTaskDTO> deliveryTask = deliveryTaskService.createDeliveryTask(deliveryTaskRequest);
 
+        return ResponseEntity.ok(deliveryTask);
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<DelivraResponse<DeliveryTaskDTO>> updateTask
+            (@PathVariable(name = "id") Integer id,
+             @RequestBody UpdateDeliveryTaskRequest deliveryTaskRequest) {
+        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+
+        DelivraResponse<DeliveryTaskDTO> deliveryTask = deliveryTaskService.updateDeliveryTaskById(id, deliveryTaskRequest);
         return ResponseEntity.ok(deliveryTask);
     }
 }
