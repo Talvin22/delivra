@@ -2,6 +2,7 @@ package site.delivra.application.service.impl;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import site.delivra.application.exception.NotFoundException;
@@ -89,8 +90,18 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
     @Override
     public DelivraResponse<PaginationResponse<DeliveryTaskDTO>> findAllDeliveryTasks(Pageable pageable) {
-        return null;
+        Page<DeliveryTaskDTO> all = deliveryTaskRepository.findAllByDeletedFalse(pageable)
+                .map(taskMapper::toDto);
 
+        return DelivraResponse.createSuccessful(PaginationResponse.<DeliveryTaskDTO>builder()
+                .content(all.getContent())
+                .pagination(PaginationResponse.Pagination.builder()
+                        .total(all.getTotalElements())
+                        .limit(all.getSize())
+                        .page(all.getNumber() + 1)
+                        .pages(all.getTotalPages())
+                        .build())
+                .build());
     }
 
     @Override
