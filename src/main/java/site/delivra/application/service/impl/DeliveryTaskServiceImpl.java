@@ -1,5 +1,6 @@
 package site.delivra.application.service.impl;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,7 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
             throw new IllegalArgumentException("Id should be positive");
         }
 
-        DeliveryTask task = deliveryTaskRepository.findById(id)
+        DeliveryTask task = deliveryTaskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage()));
 
         DeliveryTaskDTO tskDto = taskMapper.toDto(task);
@@ -78,8 +79,12 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
     }
 
     @Override
-    public void softDeleteUserDeliveryTask(Integer id) {
+    public void softDeleteUserDeliveryTask(@NotNull Integer id) {
+        DeliveryTask deliveryTask = deliveryTaskRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage(id)));
 
+        deliveryTask.setDeleted(true);
+        deliveryTaskRepository.save(deliveryTask);
     }
 
     @Override
