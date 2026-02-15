@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import site.delivra.application.model.constants.ApiLogMassage;
 import site.delivra.application.model.dto.DeliveryTaskDTO;
 import site.delivra.application.model.request.task.NewDeliveryTaskRequest;
+import site.delivra.application.model.request.task.SearchDeliveryTaskRequest;
 import site.delivra.application.model.request.task.UpdateDeliveryTaskRequest;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.model.response.PaginationResponse;
@@ -68,6 +69,19 @@ public class DeliveryTaskController {
         log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
         Pageable pageable = PageRequest.of(page, limit);
         DelivraResponse<PaginationResponse<DeliveryTaskDTO>> allDeliveryTasks = deliveryTaskService.findAllDeliveryTasks(pageable);
+        return ResponseEntity.ok(allDeliveryTasks);
+
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<DelivraResponse<PaginationResponse<DeliveryTaskDTO>>> searchTasks(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "limit", defaultValue = "10") int limit,
+            @RequestBody SearchDeliveryTaskRequest searchDeliveryTaskRequest) {
+
+        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        Pageable pageable = PageRequest.of(page, limit);
+        DelivraResponse<PaginationResponse<DeliveryTaskDTO>> allDeliveryTasks = deliveryTaskService.searchDeliveryTasks(searchDeliveryTaskRequest, pageable);
         return ResponseEntity.ok(allDeliveryTasks);
 
     }
