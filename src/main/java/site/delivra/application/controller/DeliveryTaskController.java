@@ -2,6 +2,8 @@ package site.delivra.application.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import site.delivra.application.model.constants.ApiLogMassage;
@@ -9,6 +11,7 @@ import site.delivra.application.model.dto.DeliveryTaskDTO;
 import site.delivra.application.model.request.task.NewDeliveryTaskRequest;
 import site.delivra.application.model.request.task.UpdateDeliveryTaskRequest;
 import site.delivra.application.model.response.DelivraResponse;
+import site.delivra.application.model.response.PaginationResponse;
 import site.delivra.application.service.DeliveryTaskService;
 import site.delivra.application.utils.ApiUtils;
 
@@ -55,5 +58,17 @@ public class DeliveryTaskController {
 
         deliveryTaskService.softDeleteUserDeliveryTask(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<DelivraResponse<PaginationResponse<DeliveryTaskDTO>>> getAllTasks(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "limit", defaultValue = "10") int limit) {
+
+        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        Pageable pageable = PageRequest.of(page, limit);
+        DelivraResponse<PaginationResponse<DeliveryTaskDTO>> allDeliveryTasks = deliveryTaskService.findAllDeliveryTasks(pageable);
+        return ResponseEntity.ok(allDeliveryTasks);
+
     }
 }
