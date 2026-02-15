@@ -8,7 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import site.delivra.application.model.constants.ApiLogMassage;
 import site.delivra.application.model.dto.DeliveryTaskDTO;
+import jakarta.validation.Valid;
+import site.delivra.application.model.dto.RouteDTO;
 import site.delivra.application.model.request.task.NewDeliveryTaskRequest;
+import site.delivra.application.model.request.task.RouteRequest;
 import site.delivra.application.model.request.task.SearchDeliveryTaskRequest;
 import site.delivra.application.model.request.task.UpdateDeliveryTaskRequest;
 import site.delivra.application.model.response.DelivraResponse;
@@ -84,5 +87,16 @@ public class DeliveryTaskController {
         DelivraResponse<PaginationResponse<DeliveryTaskDTO>> allDeliveryTasks = deliveryTaskService.searchDeliveryTasks(searchDeliveryTaskRequest, pageable);
         return ResponseEntity.ok(allDeliveryTasks);
 
+    }
+
+    @PostMapping("/{id}/route")
+    public ResponseEntity<DelivraResponse<RouteDTO>> getRoute(
+            @PathVariable(name = "id") Integer id,
+            @RequestBody @Valid RouteRequest routeRequest) {
+        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+
+        routeRequest.setTaskId(id);
+        DelivraResponse<RouteDTO> route = deliveryTaskService.getRouteForTask(routeRequest);
+        return ResponseEntity.ok(route);
     }
 }

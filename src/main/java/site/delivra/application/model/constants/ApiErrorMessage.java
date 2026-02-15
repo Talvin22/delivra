@@ -37,7 +37,13 @@ public enum ApiErrorMessage {
             + ApiConstants.REQUIRED_MIN_CHARACTERS_NUMBER_IN_PASSWORD + " character(s), "
             + ApiConstants.REQUIRED_MIN_DIGITS_NUMBER_IN_PASSWORD + " digit(s). "),
 
-    HAVE_NO_ACCESS("You don't have the necessary permissions to perform this action.")
+    HAVE_NO_ACCESS("You don't have the necessary permissions to perform this action."),
+
+    GEOCODING_FAILED("Failed to geocode address: %s"),
+    GEOCODING_NO_RESULTS("No geocoding results found for address: %s"),
+    ROUTING_FAILED("Failed to calculate route from (%s, %s) to (%s, %s)"),
+    ROUTING_NO_RESULTS("No route found from (%s, %s) to (%s, %s)"),
+    TASK_MISSING_COORDINATES("Delivery task with ID: %s has no coordinates for routing")
     ;
 
     private final String message;

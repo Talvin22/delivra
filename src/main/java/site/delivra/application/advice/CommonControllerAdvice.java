@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import site.delivra.application.exception.DataExistException;
+import site.delivra.application.exception.HereApiException;
 import site.delivra.application.exception.InvalidPasswordException;
 import site.delivra.application.exception.NotDriverException;
 import site.delivra.application.exception.NotFoundException;
@@ -74,6 +75,15 @@ public class CommonControllerAdvice {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ResponseEntity<String> handleNotDriverException(NotDriverException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(HereApiException.class)
+    @ResponseBody
+    protected ResponseEntity<String> handleHereApiException(HereApiException e) {
+        logStackTrace(e);
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(e.getMessage());
     }
 
     private void logStackTrace(Exception ex) {
