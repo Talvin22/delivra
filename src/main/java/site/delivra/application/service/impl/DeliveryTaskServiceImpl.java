@@ -67,8 +67,14 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
     }
 
     @Override
-    public DelivraResponse<DeliveryTaskDTO> updateDeliveryTaskById(Integer userId, UpdateDeliveryTaskRequest updateDeliveryTaskRequest) {
-        return null;
+    public DelivraResponse<DeliveryTaskDTO> updateDeliveryTaskById(Integer deliveryTaskId, UpdateDeliveryTaskRequest updateDeliveryTaskRequest) {
+        DeliveryTask deliveryTask = deliveryTaskRepository.findByIdAndDeletedFalse(deliveryTaskId)
+                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage(deliveryTaskId)));
+
+        taskMapper.updateDeliveryTask(updateDeliveryTaskRequest, deliveryTask);
+        DeliveryTask updated = deliveryTaskRepository.save(deliveryTask);
+        return DelivraResponse.createSuccessful(taskMapper.toDto(updated));
+
     }
 
     @Override
@@ -78,7 +84,7 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
     @Override
     public DelivraResponse<PaginationResponse<DeliveryTaskDTO>> findAllDeliveryTasks(Pageable pageable) {
-        return null;
+
     }
 
     @Override

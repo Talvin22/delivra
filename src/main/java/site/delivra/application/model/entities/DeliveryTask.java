@@ -57,6 +57,9 @@ public class DeliveryTask {
     @Column(nullable = false)
     private LocalDateTime updated;
 
+    @Column(nullable = false)
+    private boolean deleted;
+
     @CreatedBy
     @Column(name = "created_by", nullable = false, updatable = false)
     private String createdBy;

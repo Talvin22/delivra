@@ -15,7 +15,7 @@ public interface DeliveryTaskService {
 
     DelivraResponse<DeliveryTaskDTO> createDeliveryTask(@NotNull NewDeliveryTaskRequest newDeliveryTaskRequest);
 
-    DelivraResponse<DeliveryTaskDTO> updateDeliveryTaskById(@NotNull Integer userId, UpdateDeliveryTaskRequest updateDeliveryTaskRequest);
+    DelivraResponse<DeliveryTaskDTO> updateDeliveryTaskById(@NotNull Integer deliveryTaskId, UpdateDeliveryTaskRequest updateDeliveryTaskRequest);
 
     void softDeleteUserDeliveryTask(@NotNull Integer id);
 

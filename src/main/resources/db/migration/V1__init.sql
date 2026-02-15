@@ -56,6 +56,7 @@ CREATE TABLE delivery_tasks(
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(50) NOT NULL,
+    deleted BOOLEAN NOT NULL default false,
     CONSTRAINT fk_delivery_task_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
