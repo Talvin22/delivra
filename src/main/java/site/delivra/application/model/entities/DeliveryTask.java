@@ -22,6 +22,14 @@ import java.time.LocalDateTime;
 @Table(name = "delivery_tasks")
 public class DeliveryTask {
 
+    public static final String ID_FIELD = "id";
+    public static final String USER_FIELD = "user";
+    public static final String STATUS_FIELD = "status";
+    public static final String ADDRESS_FIELD = "address";
+    public static final String CREATED_FIELD = "created";
+    public static final String CREATED_BY_FIELD = "createdBy";
+    public static final String DELETED_FIELD = "deleted";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
