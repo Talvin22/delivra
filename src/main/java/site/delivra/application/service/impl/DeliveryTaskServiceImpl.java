@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import site.delivra.application.exception.NotFoundException;
 import site.delivra.application.mapper.DeliveryTaskMapper;
@@ -18,6 +19,7 @@ import site.delivra.application.model.response.PaginationResponse;
 import site.delivra.application.model.entities.User;
 import site.delivra.application.repository.DeliveryTaskRepository;
 import site.delivra.application.repository.UserRepository;
+import site.delivra.application.repository.criteria.DeliveryTaskSearchCriteria;
 import site.delivra.application.service.DeliveryTaskService;
 import site.delivra.application.service.model.DelivraServiceUserRole;
 
@@ -106,6 +108,19 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
     @Override
     public DelivraResponse<PaginationResponse<DeliveryTaskDTO>> searchDeliveryTasks(SearchDeliveryTaskRequest searchRequest, Pageable pageable) {
-        return null;
+        Specification<DeliveryTask> specification = new DeliveryTaskSearchCriteria(searchRequest);
+
+        Page<DeliveryTaskDTO> all = deliveryTaskRepository.findAll(specification, pageable)
+                .map(taskMapper::toDto);
+
+        return DelivraResponse.createSuccessful(PaginationResponse.<DeliveryTaskDTO>builder()
+                .content(all.getContent())
+                .pagination(PaginationResponse.Pagination.builder()
+                        .total(all.getTotalElements())
+                        .limit(all.getSize())
+                        .page(all.getNumber() + 1)
+                        .pages(all.getTotalPages())
+                        .build())
+                .build());
     }
 }
