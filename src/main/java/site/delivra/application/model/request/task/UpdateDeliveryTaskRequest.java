@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import site.delivra.application.model.enums.DeliveryTaskStatus;
 
 @Data
 @NoArgsConstructor
@@ -15,5 +16,5 @@ public class UpdateDeliveryTaskRequest {
 
     private Double longitude;
 
-    private String status;
+    private DeliveryTaskStatus status;
 }

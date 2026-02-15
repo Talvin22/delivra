@@ -31,15 +31,6 @@ public interface DeliveryTaskMapper {
     @Mapping(target = "createdBy", ignore = true)
     DeliveryTask createDeliveryTask(NewDeliveryTaskRequest deliveryTaskRequest);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "startTime", ignore = true)
-    @Mapping(target = "endTime", ignore = true)
-    @Mapping(target = "created", ignore = true)
-    @Mapping(target = "updated", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
     DeliveryTask updateDeliveryTask(UpdateDeliveryTaskRequest deliveryTaskRequest, @MappingTarget DeliveryTask deliveryTask);
 
 }

@@ -48,4 +48,12 @@ public class DeliveryTaskController {
         DelivraResponse<DeliveryTaskDTO> deliveryTask = deliveryTaskService.updateDeliveryTaskById(id, deliveryTaskRequest);
         return ResponseEntity.ok(deliveryTask);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<DelivraResponse<DeliveryTaskDTO>> deleteTask(@PathVariable(name = "id") Integer id) {
+        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+
+        deliveryTaskService.softDeleteUserDeliveryTask(id);
+        return ResponseEntity.ok().build();
+    }
 }

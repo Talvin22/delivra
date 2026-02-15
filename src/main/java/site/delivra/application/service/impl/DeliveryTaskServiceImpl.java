@@ -39,7 +39,7 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
         }
 
         DeliveryTask task = deliveryTaskRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage(id)));
 
         DeliveryTaskDTO tskDto = taskMapper.toDto(task);
         return DelivraResponse.createSuccessful(tskDto);
@@ -89,6 +89,7 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
     @Override
     public DelivraResponse<PaginationResponse<DeliveryTaskDTO>> findAllDeliveryTasks(Pageable pageable) {
+        return null;
 
     }
 

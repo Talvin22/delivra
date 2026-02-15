@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import site.delivra.application.exception.DataExistException;
 import site.delivra.application.exception.InvalidPasswordException;
+import site.delivra.application.exception.NotDriverException;
 import site.delivra.application.exception.NotFoundException;
 import site.delivra.application.model.constants.ApiConstants;
 
@@ -65,6 +66,13 @@ public class CommonControllerAdvice {
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseBody
     public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(NotDriverException.class)
+    @ResponseBody
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<String> handleNotDriverException(NotDriverException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
     }
 
