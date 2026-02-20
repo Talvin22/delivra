@@ -43,7 +43,12 @@ public enum ApiErrorMessage {
     GEOCODING_NO_RESULTS("No geocoding results found for address: %s"),
     ROUTING_FAILED("Failed to calculate route from (%s, %s) to (%s, %s)"),
     ROUTING_NO_RESULTS("No route found from (%s, %s) to (%s, %s)"),
-    TASK_MISSING_COORDINATES("Delivery task with ID: %s has no coordinates for routing")
+    TASK_MISSING_COORDINATES("Delivery task with ID: %s has no coordinates for routing"),
+
+    NAVIGATION_SESSION_NOT_FOUND("Navigation session with ID: %s not found"),
+    NAVIGATION_SESSION_ALREADY_ACTIVE("Delivery task with ID: %s already has an active navigation session"),
+    NAVIGATION_SESSION_NOT_ACTIVE("Navigation session with ID: %s is not active"),
+    CHAT_MESSAGE_NOT_FOUND("Chat message with ID: %s not found")
     ;
 
     private final String message;

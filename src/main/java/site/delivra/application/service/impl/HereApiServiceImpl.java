@@ -13,6 +13,7 @@ import site.delivra.application.model.dto.RouteDTO;
 import site.delivra.application.model.dto.here.HereGeocodingResponse;
 import site.delivra.application.model.dto.here.HereRoutingResponse;
 import site.delivra.application.service.HereApiService;
+import site.delivra.application.utils.FlexiblePolylineDecoder;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -106,6 +107,7 @@ public class HereApiServiceImpl implements HereApiService {
         int totalDuration = 0;
         int totalDistance = 0;
         List<RouteDTO.RouteInstructionDTO> allInstructions = new ArrayList<>();
+        List<FlexiblePolylineDecoder.Waypoint> allWaypoints = new ArrayList<>();
 
         for (HereRoutingResponse.Section section : route.getSections()) {
             if (section.getPolyline() != null) {
@@ -113,6 +115,7 @@ public class HereApiServiceImpl implements HereApiService {
                     polylineBuilder.append(";");
                 }
                 polylineBuilder.append(section.getPolyline());
+                allWaypoints.addAll(FlexiblePolylineDecoder.decode(section.getPolyline()));
             }
 
             if (section.getSummary() != null) {
@@ -135,6 +138,7 @@ public class HereApiServiceImpl implements HereApiService {
                 .polyline(polylineBuilder.toString())
                 .durationInSeconds(totalDuration)
                 .distanceInMeters(totalDistance)
+                .waypoints(allWaypoints)
                 .instructions(allInstructions)
                 .build();
     }

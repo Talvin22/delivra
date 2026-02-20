@@ -44,6 +44,8 @@ public class SecurityConfig {
             new AntPathRequestMatcher("/webjars/**"),
             new AntPathRequestMatcher("/actuator/**"),
 
+            // WebSocket handshake
+            new AntPathRequestMatcher("/ws/**"),
     };
 
     @Bean

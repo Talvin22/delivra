@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import site.delivra.application.utils.FlexiblePolylineDecoder;
 
 import java.io.Serializable;
 import java.util.List;
@@ -17,6 +18,7 @@ public class RouteDTO implements Serializable {
     private String polyline;
     private Integer durationInSeconds;
     private Integer distanceInMeters;
+    private List<FlexiblePolylineDecoder.Waypoint> waypoints;
     private List<RouteInstructionDTO> instructions;
 
     @Data
