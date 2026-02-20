@@ -53,18 +53,23 @@ public class NavigationServiceImpl implements NavigationService {
             throw new InvalidDataException(ApiErrorMessage.TASK_MISSING_COORDINATES.getMessage(taskId));
         }
 
-        RouteDTO route = hereApiService.calculateTruckRoute(
-                request.getOriginLatitude(), request.getOriginLongitude(),
-                task.getLatitude(), task.getLongitude(),
-                request.getGrossWeight(), request.getHeight(),
-                request.getWidth(), request.getLength()
-        );
+        RouteDTO route = null;
+        try {
+            route = hereApiService.calculateTruckRoute(
+                    request.getOriginLatitude(), request.getOriginLongitude(),
+                    task.getLatitude(), task.getLongitude(),
+                    request.getGrossWeight(), request.getHeight(),
+                    request.getWidth(), request.getLength()
+            );
+        } catch (Exception e) {
+            log.warn("Route calculation failed for task {}, starting session without route: {}", taskId, e.getMessage());
+        }
 
         NavigationSession session = new NavigationSession();
         session.setDeliveryTask(task);
         session.setCurrentLatitude(request.getOriginLatitude());
         session.setCurrentLongitude(request.getOriginLongitude());
-        session.setEncodedPolyline(route.getPolyline());
+        if (route != null) session.setEncodedPolyline(route.getPolyline());
         session.setStatus(NavigationSessionStatus.ACTIVE);
         session = sessionRepository.save(session);
 

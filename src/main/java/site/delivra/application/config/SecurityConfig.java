@@ -46,6 +46,13 @@ public class SecurityConfig {
 
             // WebSocket handshake
             new AntPathRequestMatcher("/ws/**"),
+
+            // Static frontend
+            new AntPathRequestMatcher("/"),
+            new AntPathRequestMatcher("/index.html"),
+            new AntPathRequestMatcher("/*.js"),
+            new AntPathRequestMatcher("/*.css"),
+            new AntPathRequestMatcher("/*.ico"),
     };
 
     @Bean

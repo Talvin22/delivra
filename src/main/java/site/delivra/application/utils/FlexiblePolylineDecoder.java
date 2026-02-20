@@ -15,21 +15,50 @@ public final class FlexiblePolylineDecoder {
     public record Waypoint(double lat, double lng) {}
 
     /**
+     * Decoding table indexed by (charCode - 45).
+     * HERE Flexible Polyline uses a custom Base64 alphabet:
+     *   A-Z → 0-25, a-z → 26-51, 0-9 → 52-61, - → 62, _ → 63
+     * Continuation flag is bit 5 (0x20); data bits are 0-4 (0x1F).
+     */
+    private static final int[] DECODING_TABLE = {
+        62, -1, -1, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1,
+         0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, -1, -1, -1, -1, 63, -1, 26, 27, 28, 29, 30, 31, 32, 33,
+        34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
+    };
+
+    /**
      * Decodes a HERE Flexible Polyline encoded string into a list of lat/lng waypoints.
+     * Supports multi-section polylines joined by ";" (as produced by HereApiServiceImpl).
      */
     public static List<Waypoint> decode(String encoded) {
+        if (encoded == null || encoded.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // Multi-section polylines are joined with ";" — decode each part separately
+        if (encoded.contains(";")) {
+            List<Waypoint> result = new ArrayList<>();
+            for (String part : encoded.split(";")) {
+                if (!part.isEmpty()) result.addAll(decodeSection(part));
+            }
+            return result;
+        }
+        return decodeSection(encoded);
+    }
+
+    private static List<Waypoint> decodeSection(String encoded) {
         if (encoded == null || encoded.isEmpty()) {
             return Collections.emptyList();
         }
 
         int[] index = {0};
 
-        // Header: first unsigned value contains (version << 4) | precision
-        long headerVal = nextUnsignedValue(encoded, index);
-        int precision = (int) (headerVal & 0x0F);
-
-        // Second header value: (thirdDimPrecision << 4) | thirdDim — skip, we only use lat/lng
+        // First header value: lower 4 bits = format version (must be 1), rest unused
         nextUnsignedValue(encoded, index);
+
+        // Second header value: lower 4 bits = 2D precision, bits 4-7 = 3rd dim precision
+        long precisionVal = nextUnsignedValue(encoded, index);
+        int precision = (int) (precisionVal & 0x0F);
 
         double factor = Math.pow(10, precision);
         List<Waypoint> result = new ArrayList<>();
@@ -48,13 +77,14 @@ public final class FlexiblePolylineDecoder {
 
     /**
      * Reads the next variable-length unsigned integer, advancing index[0].
-     * Each character contributes 5 bits; the continuation bit is bit 5 (0x20).
+     * Uses HERE's custom Base64 DECODING_TABLE (offset 45).
+     * Each character contributes 5 data bits; bit 5 is the continuation flag.
      */
     private static long nextUnsignedValue(String encoded, int[] index) {
         long result = 0;
         int shift = 0;
         while (index[0] < encoded.length()) {
-            int chunk = encoded.charAt(index[0]++) - 63;
+            int chunk = DECODING_TABLE[encoded.charAt(index[0]++) - 45];
             result |= ((long) (chunk & 0x1F)) << shift;
             shift += 5;
             if ((chunk & 0x20) == 0) {

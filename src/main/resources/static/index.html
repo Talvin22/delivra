@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivra Navigator</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f1117;
+            color: #e2e8f0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ─── Header ─── */
+        header {
+            background: #1a1d2e;
+            border-bottom: 1px solid #2d3148;
+            padding: 0 20px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #6c8aff;
+            letter-spacing: 1px;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #4a4f6a;
+            display: inline-block;
+        }
+        .dot.connected { background: #22c55e; box-shadow: 0 0 6px #22c55e88; }
+        .dot.navigating { background: #6c8aff; box-shadow: 0 0 6px #6c8aff88; animation: pulse 1.5s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ─── Main layout ─── */
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ─── Left sidebar ─── */
+        .sidebar {
+            width: 300px;
+            background: #1a1d2e;
+            border-right: 1px solid #2d3148;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .panel {
+            padding: 16px;
+            border-bottom: 1px solid #2d3148;
+        }
+
+        .panel-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #6c8aff;
+            margin-bottom: 12px;
+        }
+
+        /* ─── Form elements ─── */
+        label {
+            display: block;
+            font-size: 12px;
+            color: #8892b0;
+            margin-bottom: 4px;
+            margin-top: 10px;
+        }
+        label:first-of-type { margin-top: 0; }
+
+        input {
+            width: 100%;
+            background: #0f1117;
+            border: 1px solid #2d3148;
+            border-radius: 6px;
+            padding: 8px 10px;
+            color: #e2e8f0;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus { border-color: #6c8aff; }
+
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        /* ─── Buttons ─── */
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 8px 14px;
+            transition: all 0.15s;
+        }
+
+        .btn-primary {
+            background: #6c8aff;
+            color: #fff;
+            width: 100%;
+            margin-top: 12px;
+        }
+        .btn-primary:hover { background: #5a78f0; }
+        .btn-primary:disabled { background: #2d3148; color: #4a4f6a; cursor: not-allowed; }
+
+        .btn-danger {
+            background: #ff4d6d22;
+            color: #ff4d6d;
+            border: 1px solid #ff4d6d44;
+            width: 100%;
+            margin-top: 8px;
+        }
+        .btn-danger:hover { background: #ff4d6d33; }
+        .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn-success {
+            background: #22c55e22;
+            color: #22c55e;
+            border: 1px solid #22c55e44;
+        }
+        .btn-success:hover { background: #22c55e33; }
+
+        /* ─── Info tags ─── */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 4px 0;
+            border-bottom: 1px solid #1e2235;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #8892b0; }
+        .info-value { color: #e2e8f0; font-weight: 500; }
+        .info-value.off-route { color: #ff4d6d; }
+        .info-value.on-route { color: #22c55e; }
+
+        /* ─── Log ─── */
+        .log {
+            background: #0f1117;
+            border: 1px solid #2d3148;
+            border-radius: 6px;
+            padding: 8px;
+            height: 160px;
+            overflow-y: auto;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            color: #8892b0;
+        }
+        .log .entry { padding: 1px 0; }
+        .log .entry.error { color: #ff4d6d; }
+        .log .entry.success { color: #22c55e; }
+        .log .entry.warn { color: #f59e0b; }
+        .log .entry.info { color: #6c8aff; }
+
+        /* ─── Map ─── */
+        #map {
+            flex: 1;
+            background: #1a1d2e;
+        }
+
+        /* ─── Right panel (chat) ─── */
+        .chat-panel {
+            width: 280px;
+            background: #1a1d2e;
+            border-left: 1px solid #2d3148;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .chat-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid #2d3148;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6c8aff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .msg {
+            max-width: 85%;
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .msg.mine {
+            align-self: flex-end;
+            background: #6c8aff22;
+            border: 1px solid #6c8aff44;
+            color: #c8d4ff;
+            border-bottom-right-radius: 2px;
+        }
+        .msg.other {
+            align-self: flex-start;
+            background: #1e2235;
+            border: 1px solid #2d3148;
+            color: #e2e8f0;
+            border-bottom-left-radius: 2px;
+        }
+        .msg .sender { font-size: 10px; color: #8892b0; margin-bottom: 3px; }
+        .msg .time { font-size: 10px; color: #4a4f6a; margin-top: 3px; text-align: right; }
+
+        .chat-input-area {
+            padding: 12px;
+            border-top: 1px solid #2d3148;
+            display: flex;
+            gap: 8px;
+        }
+        .chat-input-area input {
+            flex: 1;
+        }
+        .chat-input-area button {
+            background: #6c8aff;
+            color: #fff;
+            padding: 8px 12px;
+            flex-shrink: 0;
+        }
+        .chat-input-area button:hover { background: #5a78f0; }
+        .chat-input-area button:disabled { background: #2d3148; color: #4a4f6a; cursor: not-allowed; }
+
+        /* ─── Map marker override ─── */
+        .driver-icon {
+            width: 28px; height: 28px;
+            background: #6c8aff;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 8px #6c8aff88;
+        }
+
+        /* ─── Overlay: login ─── */
+        #login-overlay {
+            position: fixed;
+            inset: 0;
+            background: #0f1117ee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-card {
+            background: #1a1d2e;
+            border: 1px solid #2d3148;
+            border-radius: 12px;
+            padding: 32px;
+            width: 340px;
+        }
+
+        .login-card h2 {
+            color: #6c8aff;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        .login-card p {
+            color: #8892b0;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        /* ─── Notification toast ─── */
+        .toast {
+            position: fixed;
+            top: 70px; right: 20px;
+            background: #1a1d2e;
+            border: 1px solid #2d3148;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 13px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast.warn { border-color: #f59e0b66; color: #f59e0b; }
+        .toast.error { border-color: #ff4d6d66; color: #ff4d6d; }
+        .toast.success { border-color: #22c55e66; color: #22c55e; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2d3148; border-radius: 2px; }
+    </style>
+</head>
+<body>
+
+<!-- Login overlay -->
+<div id="login-overlay">
+    <div class="login-card">
+        <h2>Delivra</h2>
+        <p>Введите данные для входа</p>
+        <label>Email</label>
+        <input id="login-email" type="email" placeholder="driver@example.com" value=""/>
+        <label>Пароль</label>
+        <input id="login-password" type="password" placeholder="••••••••"/>
+        <button class="btn-primary" onclick="login()">Войти</button>
+        <div id="login-error" style="color:#ff4d6d;font-size:12px;margin-top:8px;display:none"></div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- Header -->
+<header>
+    <div class="logo">⬡ DELIVRA</div>
+    <div class="status-bar">
+        <span><span class="dot" id="ws-dot"></span> WebSocket</span>
+        <span><span class="dot" id="nav-dot"></span> Навигация</span>
+        <span id="user-label" style="color:#8892b0">—</span>
+        <button class="btn-success" style="font-size:12px;padding:4px 10px" onclick="logout()">Выйти</button>
+    </div>
+</header>
+
+<!-- Main -->
+<div class="main">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+        <!-- Navigation panel -->
+        <div class="panel">
+            <div class="panel-title">Навигация</div>
+
+            <label>Task ID</label>
+            <input id="task-id" type="number" placeholder="1"/>
+
+            <div class="row-2" style="margin-top:10px">
+                <div>
+                    <label>Масса (кг)</label>
+                    <input id="gross-weight" type="number" placeholder="12000"/>
+                </div>
+                <div>
+                    <label>Высота (см)</label>
+                    <input id="height" type="number" placeholder="400"/>
+                </div>
+            </div>
+
+            <!-- GPS status indicator -->
+            <div id="gps-status" style="margin-top:10px;font-size:12px;color:#8892b0;
+                 background:#0f1117;border:1px solid #2d3148;border-radius:6px;
+                 padding:7px 10px;display:flex;align-items:center;gap:8px">
+                <span id="gps-dot" style="width:8px;height:8px;border-radius:50%;
+                      background:#4a4f6a;flex-shrink:0;display:inline-block"></span>
+                <span id="gps-text">GPS не определён</span>
+            </div>
+
+            <button class="btn-primary" id="btn-start" onclick="startNavigation()">▶ Начать навигацию</button>
+            <button class="btn-danger" id="btn-end" onclick="endNavigation()" disabled>■ Завершить</button>
+        </div>
+
+        <!-- Ручная симуляция (тест) -->
+        <div class="panel" id="sim-panel">
+            <div class="panel-title" style="cursor:pointer" onclick="toggleSimPanel()">
+                Симуляция позиции <span id="sim-toggle" style="float:right;opacity:0.5">▸</span>
+            </div>
+            <div id="sim-body" style="display:none">
+                <div class="row-2" style="margin-top:8px">
+                    <div>
+                        <label>Lat</label>
+                        <input id="sim-lat" type="number" step="any" placeholder="50.45"/>
+                    </div>
+                    <div>
+                        <label>Lng</label>
+                        <input id="sim-lng" type="number" step="any" placeholder="30.52"/>
+                    </div>
+                </div>
+                <button class="btn-primary" id="btn-send-pos" onclick="sendPosition()" disabled style="margin-top:8px">
+                    📡 Отправить позицию
+                </button>
+                <button class="btn-primary" id="btn-use-map" onclick="toggleClickMode()"
+                        style="background:#1e2235;border:1px solid #2d3148;margin-top:6px">
+                    🗺 Выбрать на карте
+                </button>
+            </div>
+        </div>
+
+        <!-- Состояние -->
+        <div class="panel">
+            <div class="panel-title">Состояние</div>
+            <div class="info-row"><span class="info-label">Сессия</span><span class="info-value" id="info-session">—</span></div>
+            <div class="info-row"><span class="info-label">Позиция</span><span class="info-value" id="info-pos">—</span></div>
+            <div class="info-row"><span class="info-label">Маршрут</span><span class="info-value" id="info-route">—</span></div>
+            <div class="info-row"><span class="info-label">Статус</span><span class="info-value" id="info-status">—</span></div>
+            <div class="info-row"><span class="info-label">Перестроек</span><span class="info-value" id="info-reroutes">0</span></div>
+        </div>
+
+        <!-- Лог -->
+        <div class="panel" style="flex:1">
+            <div class="panel-title">Лог событий</div>
+            <div class="log" id="log"></div>
+        </div>
+
+    </div>
+
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Chat -->
+    <div class="chat-panel">
+        <div class="chat-header">
+            💬 Чат
+            <span style="font-size:11px;color:#8892b0;font-weight:400" id="chat-task-label">Task #—</span>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div style="text-align:center;color:#4a4f6a;font-size:12px;margin-top:20px">
+                Начните навигацию, чтобы открыть чат
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input id="chat-input" placeholder="Сообщение..." disabled
+                   onkeydown="if(event.key==='Enter')sendChat()"/>
+            <button id="btn-chat-send" onclick="sendChat()" disabled>→</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+
+<script>
+// ────────────────────────────────────────────────
+// State
+// ────────────────────────────────────────────────
+const API = '';  // same origin
+let token = null;
+let currentUser = null;
+let stompClient = null;
+let sessionId = null;
+let taskId = null;
+let rerouteCount = 0;
+let clickModeActive = false;
+
+// Geolocation
+let watchId = null;          // navigator.geolocation.watchPosition id
+let currentGpsPos = null;    // { lat, lng } — последняя позиция с GPS
+
+// Map objects
+let map, driverMarker, destMarker, routeLayer;
+
+// ────────────────────────────────────────────────
+// Init map
+// ────────────────────────────────────────────────
+function initMap() {
+    map = L.map('map', { zoomControl: true }).setView([50.45, 30.52], 12);
+
+    // Dark tile layer
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        maxZoom: 19
+    }).addTo(map);
+
+    map.on('click', e => {
+        if (clickModeActive) {
+            document.getElementById('sim-lat').value = e.latlng.lat.toFixed(6);
+            document.getElementById('sim-lng').value = e.latlng.lng.toFixed(6);
+            log('info', `Выбрано на карте: ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`);
+            clickModeActive = false;
+            document.getElementById('btn-use-map').style.borderColor = '#2d3148';
+            toast('Координаты выбраны — нажмите «Отправить позицию»', 'success');
+        }
+    });
+}
+
+function toggleClickMode() {
+    clickModeActive = !clickModeActive;
+    const btn = document.getElementById('btn-use-map');
+    btn.style.borderColor = clickModeActive ? '#6c8aff' : '#2d3148';
+    if (clickModeActive) toast('Кликните на карту для выбора позиции', 'info');
+}
+
+// ────────────────────────────────────────────────
+// Auth
+// ────────────────────────────────────────────────
+async function login() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-password').value;
+    const errEl = document.getElementById('login-error');
+    errEl.style.display = 'none';
+
+    try {
+        const res = await fetch(`${API}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: pass })
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            errEl.textContent = data.message || 'Неверный логин или пароль';
+            errEl.style.display = 'block';
+            return;
+        }
+
+        token = data.payload.token;
+        currentUser = { id: parseUserId(token), username: data.payload.username, email };
+        document.getElementById('user-label').textContent = data.payload.username || email;
+        document.getElementById('login-overlay').style.display = 'none';
+
+        // Leaflet не знает размер контейнера пока оверлей его перекрывал
+        setTimeout(() => map.invalidateSize(), 100);
+
+        log('success', `Вошёл как ${data.payload.username || email}`);
+        connectWebSocket();
+    } catch (e) {
+        errEl.textContent = 'Ошибка соединения с сервером';
+        errEl.style.display = 'block';
+    }
+}
+
+function logout() {
+    disconnectWebSocket();
+    stopGpsWatch();
+    token = null; currentUser = null; sessionId = null; taskId = null;
+    document.getElementById('login-overlay').style.display = 'flex';
+    document.getElementById('user-label').textContent = '—';
+}
+
+function parseUserId(jwt) {
+    try {
+        const payload = JSON.parse(atob(jwt.split('.')[1]));
+        return payload.USER_ID || payload.sub;
+    } catch { return null; }
+}
+
+// ────────────────────────────────────────────────
+// WebSocket
+// ────────────────────────────────────────────────
+function connectWebSocket() {
+    stompClient = new StompJs.Client({
+        webSocketFactory: () => new SockJS(`${location.origin}/ws`),
+        connectHeaders: { Authorization: 'Bearer ' + token },
+        reconnectDelay: 5000,
+        onConnect: onWsConnected,
+        onStompError: frame => {
+            log('error', 'STOMP error: ' + frame.headers?.message);
+            setWsDot(false);
+        },
+        onDisconnect: () => {
+            log('warn', 'WebSocket disconnected');
+            setWsDot(false);
+        }
+    });
+    stompClient.activate();
+}
+
+function disconnectWebSocket() {
+    if (stompClient) stompClient.deactivate();
+    setWsDot(false);
+}
+
+function onWsConnected() {
+    log('success', 'WebSocket подключён');
+    setWsDot(true);
+    toast('WebSocket подключён', 'success');
+}
+
+function subscribeToTask(tId) {
+    // Position updates
+    stompClient.subscribe(`/topic/navigation/${tId}/position`, msg => {
+        const event = JSON.parse(msg.body);
+        onPositionEvent(event);
+    });
+
+    // Route updates (reroute)
+    stompClient.subscribe(`/topic/navigation/${tId}/route`, msg => {
+        const event = JSON.parse(msg.body);
+        onRouteUpdateEvent(event);
+    });
+
+    // Chat
+    stompClient.subscribe(`/topic/chat/${tId}`, msg => {
+        const chatMsg = JSON.parse(msg.body);
+        onChatMessage(chatMsg);
+    });
+
+    log('info', `Подписан на топики task #${tId}`);
+}
+
+// ────────────────────────────────────────────────
+// Navigation REST
+// ────────────────────────────────────────────────
+async function startNavigation() {
+    taskId = parseInt(document.getElementById('task-id').value);
+    if (!taskId) { toast('Введите Task ID', 'error'); return; }
+
+    // Берём GPS позицию — если ещё не получена, запрашиваем разово
+    let originLat, originLng;
+    if (currentGpsPos) {
+        originLat = currentGpsPos.lat;
+        originLng = currentGpsPos.lng;
+    } else {
+        toast('Определяю GPS позицию...', 'info');
+        try {
+            const pos = await new Promise((resolve, reject) =>
+                navigator.geolocation.getCurrentPosition(resolve, reject,
+                    { enableHighAccuracy: true, timeout: 10000 })
+            );
+            originLat = pos.coords.latitude;
+            originLng = pos.coords.longitude;
+            currentGpsPos = { lat: originLat, lng: originLng };
+        } catch (e) {
+            toast('Не удалось получить GPS. Используй симуляцию.', 'error');
+            log('error', 'GPS недоступен: ' + e.message);
+            return;
+        }
+    }
+
+    try {
+        const body = { originLatitude: originLat, originLongitude: originLng };
+        const gw = document.getElementById('gross-weight').value;
+        const h  = document.getElementById('height').value;
+        if (gw) body.grossWeight = parseInt(gw);
+        if (h)  body.height = parseInt(h);
+
+        const res = await apiFetch(`/tasks/${taskId}/navigation/start`, 'POST', body);
+
+        sessionId = res.payload.sessionId;
+        console.log('[DEBUG] navigation response:', JSON.stringify(res.payload, null, 2));
+        log('success', `Навигация запущена. sessionId=${sessionId}`);
+        toast('Навигация запущена!', 'success');
+
+        document.getElementById('info-session').textContent = sessionId;
+        document.getElementById('info-status').textContent = 'ACTIVE';
+        document.getElementById('info-status').className = 'info-value on-route';
+        document.getElementById('btn-start').disabled = true;
+        document.getElementById('btn-end').disabled = false;
+        document.getElementById('btn-send-pos').disabled = false;
+        document.getElementById('chat-input').disabled = false;
+        document.getElementById('btn-chat-send').disabled = false;
+        document.getElementById('chat-task-label').textContent = `Task #${taskId}`;
+        document.getElementById('nav-dot').classList.add('navigating');
+
+        // Always place driver marker at origin, regardless of route
+        updateDriverMarker(originLat, originLng);
+        map.setView([originLat, originLng], 14);
+        document.getElementById('info-pos').textContent = `${originLat.toFixed(5)}, ${originLng.toFixed(5)}`;
+
+        // Draw route if returned
+        if (res.payload.route) {
+            drawRoute(res.payload.route, originLat, originLng);
+            const dist = res.payload.route.distanceInMeters
+                ? `${(res.payload.route.distanceInMeters / 1000).toFixed(1)} км` : '?';
+            const dur = res.payload.route.durationInSeconds
+                ? formatDuration(res.payload.route.durationInSeconds) : '?';
+            log('info', `Маршрут: ${dist}, ~${dur}`);
+        } else {
+            log('warn', 'Маршрут не получен (HERE API недоступен) — позиция отображена');
+        }
+
+        // Subscribe after navigation started
+        subscribeToTask(taskId);
+
+        // Prefill sim coords (fallback)
+        document.getElementById('sim-lat').value = originLat.toFixed(6);
+        document.getElementById('sim-lng').value = originLng.toFixed(6);
+
+        // Load chat history
+        loadChatHistory();
+
+    } catch (e) {
+        toast(e.message, 'error');
+        log('error', 'Ошибка: ' + e.message);
+    }
+}
+
+async function endNavigation() {
+    if (!taskId) return;
+    try {
+        await apiFetch(`/tasks/${taskId}/navigation/end`, 'POST');
+        log('success', 'Навигация завершена');
+        toast('Навигация завершена', 'success');
+
+        sessionId = null;
+        document.getElementById('info-session').textContent = '—';
+        document.getElementById('info-status').textContent = 'COMPLETED';
+        document.getElementById('info-status').className = 'info-value';
+        document.getElementById('btn-start').disabled = false;
+        document.getElementById('btn-end').disabled = true;
+        document.getElementById('btn-send-pos').disabled = true;
+        document.getElementById('nav-dot').classList.remove('navigating');
+    } catch (e) {
+        toast(e.message, 'error');
+    }
+}
+
+// ────────────────────────────────────────────────
+// Position update via WebSocket
+// ────────────────────────────────────────────────
+function sendPosition() {
+    if (!stompClient?.connected || !sessionId) {
+        toast('WebSocket не подключён или навигация не запущена', 'error'); return;
+    }
+    const lat = parseFloat(document.getElementById('sim-lat').value);
+    const lng = parseFloat(document.getElementById('sim-lng').value);
+    if (isNaN(lat) || isNaN(lng)) { toast('Введите корректные координаты', 'error'); return; }
+
+    stompClient.publish({
+        destination: `/app/navigation/${sessionId}/position`,
+        body: JSON.stringify({ latitude: lat, longitude: lng })
+    });
+    log('info', `Отправлена позиция: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+}
+
+// ────────────────────────────────────────────────
+// WebSocket event handlers
+// ────────────────────────────────────────────────
+function onPositionEvent(event) {
+    const { latitude: lat, longitude: lng, onRoute } = event;
+
+    updateDriverMarker(lat, lng);
+    document.getElementById('info-pos').textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+
+    if (onRoute) {
+        document.getElementById('info-route').textContent = 'На маршруте ✓';
+        document.getElementById('info-route').className = 'info-value on-route';
+    }
+    log('info', `Позиция обновлена: ${lat.toFixed(5)}, ${lng.toFixed(5)} | на маршруте: ${onRoute}`);
+}
+
+function onRouteUpdateEvent(event) {
+    const { latitude: lat, longitude: lng, route } = event;
+    rerouteCount++;
+
+    updateDriverMarker(lat, lng);
+    document.getElementById('info-pos').textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    document.getElementById('info-route').textContent = 'Перестройка маршрута!';
+    document.getElementById('info-route').className = 'info-value off-route';
+    document.getElementById('info-reroutes').textContent = rerouteCount;
+
+    if (route) drawRoute(route, lat, lng);
+
+    log('warn', `⚠ Водитель сбился с маршрута — маршрут перестроен`);
+    toast('Маршрут перестроен!', 'warn');
+
+    // After a moment mark as on-route again
+    setTimeout(() => {
+        document.getElementById('info-route').textContent = 'Новый маршрут ✓';
+        document.getElementById('info-route').className = 'info-value on-route';
+    }, 3000);
+}
+
+// ────────────────────────────────────────────────
+// Map drawing
+// ────────────────────────────────────────────────
+function drawRoute(route, originLat, originLng) {
+    // Remove old route
+    if (routeLayer) map.removeLayer(routeLayer);
+
+    const waypoints = route.waypoints || [];
+    console.log('[DEBUG] drawRoute: waypoints.length=', waypoints.length, 'first=', waypoints[0]);
+    if (waypoints.length > 0) {
+        const latlngs = waypoints.map(w => [w.lat, w.lng]);
+        console.log('[DEBUG] latlngs[0]=', latlngs[0]);
+        routeLayer = L.polyline(latlngs, {
+            color: '#6c8aff',
+            weight: 4,
+            opacity: 0.85
+        }).addTo(map);
+        console.log('[DEBUG] polyline added to map, bounds=', routeLayer.getBounds());
+        // Navigator-style: stay centered on driver, don't zoom to full route
+    }
+
+    // Destination marker (last waypoint)
+    const dest = waypoints[waypoints.length - 1];
+    if (dest) {
+        if (destMarker) map.removeLayer(destMarker);
+        destMarker = L.marker([dest.lat, dest.lng], {
+            icon: L.divIcon({
+                className: '',
+                html: '<div style="background:#ff4d6d;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px #ff4d6d88"></div>',
+                iconSize: [14, 14],
+                iconAnchor: [7, 7]
+            })
+        }).addTo(map).bindPopup('Адрес доставки');
+    }
+
+    // Update driver marker at origin
+    updateDriverMarker(originLat, originLng);
+
+    // Route info
+    const dist = route.distanceInMeters ? `${(route.distanceInMeters / 1000).toFixed(1)} км` : '—';
+    const dur  = route.durationInSeconds ? formatDuration(route.durationInSeconds) : '—';
+    log('info', `Маршрут: ${dist}, ~${dur} | ${waypoints.length} точек`);
+}
+
+function updateDriverMarker(lat, lng) {
+    if (!driverMarker) {
+        driverMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: '',
+                html: '<div class="driver-icon"></div>',
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+            }),
+            zIndexOffset: 1000
+        }).addTo(map).bindPopup('Водитель');
+    } else {
+        driverMarker.setLatLng([lat, lng]);
+    }
+}
+
+// ────────────────────────────────────────────────
+// Chat
+// ────────────────────────────────────────────────
+async function loadChatHistory() {
+    try {
+        const res = await apiFetch(`/tasks/${taskId}/chat?limit=50`);
+        const msgs = res.payload?.content || [];
+        const container = document.getElementById('chat-messages');
+        container.innerHTML = '';
+        msgs.forEach(m => appendChatMessage(m, false));
+    } catch {}
+}
+
+function sendChat() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text || !stompClient?.connected || !taskId) return;
+
+    stompClient.publish({
+        destination: `/app/chat/${taskId}`,
+        body: JSON.stringify({ messageText: text })
+    });
+    input.value = '';
+}
+
+function onChatMessage(msg) {
+    appendChatMessage(msg, true);
+}
+
+function appendChatMessage(msg, scroll) {
+    const isMine = currentUser && msg.senderId === currentUser.id;
+    const container = document.getElementById('chat-messages');
+
+    // Remove placeholder
+    const placeholder = container.querySelector('div[style]');
+    if (placeholder) placeholder.remove();
+
+    const el = document.createElement('div');
+    el.className = `msg ${isMine ? 'mine' : 'other'}`;
+    el.innerHTML = `
+        ${!isMine ? `<div class="sender">${msg.senderUsername || 'Пользователь'}</div>` : ''}
+        ${escHtml(msg.messageText)}
+        <div class="time">${formatTime(msg.created)}</div>
+    `;
+    container.appendChild(el);
+    if (scroll) container.scrollTop = container.scrollHeight;
+}
+
+// ────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────
+async function apiFetch(path, method = 'GET', body = null) {
+    const opts = {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API + path, opts);
+    const data = await res.json();
+    if (!res.ok || data.success === false) throw new Error(data.message || `HTTP ${res.status}`);
+    return data;
+}
+
+function setWsDot(connected) {
+    const dot = document.getElementById('ws-dot');
+    dot.className = 'dot' + (connected ? ' connected' : '');
+}
+
+function log(type, msg) {
+    const el = document.getElementById('log');
+    const time = new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const entry = document.createElement('div');
+    entry.className = `entry ${type}`;
+    entry.textContent = `[${time}] ${msg}`;
+    el.appendChild(entry);
+    el.scrollTop = el.scrollHeight;
+}
+
+let toastTimer;
+function toast(msg, type = 'info') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast ${type} show`;
+    clearTimeout(toastTimer);
+    const duration = type === 'error' ? 6000 : 3000;
+    toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+}
+
+function formatDuration(sec) {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    return h > 0 ? `${h}ч ${m}мин` : `${m}мин`;
+}
+
+function formatTime(isoStr) {
+    if (!isoStr) return '';
+    try {
+        return new Date(isoStr).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+    } catch { return ''; }
+}
+
+function escHtml(str) {
+    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ────────────────────────────────────────────────
+// Geolocation
+// ────────────────────────────────────────────────
+function startGpsWatch() {
+    if (!navigator.geolocation) {
+        setGpsStatus('error', 'GPS не поддерживается браузером');
+        return;
+    }
+    setGpsStatus('searching', 'Определяю позицию...');
+
+    watchId = navigator.geolocation.watchPosition(
+        pos => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+
+            // Проверяем ДО установки currentGpsPos
+            const isFirst = !currentGpsPos;
+            currentGpsPos = { lat, lng };
+            setGpsStatus('ok', `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+
+            // Обновляем маркер СРАЗУ — не ждём ответа сервера
+            updateDriverMarker(lat, lng);
+            document.getElementById('info-pos').textContent =
+                `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+
+            // При первом сигнале центрируем карту (если навигация ещё не запущена)
+            if (isFirst && !sessionId) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                    map.setView([lat, lng], 14);
+                }, 50);
+            }
+
+            // Если навигация активна — отправляем на сервер (для off-route detection и диспетчера)
+            if (sessionId && stompClient?.connected) {
+                stompClient.publish({
+                    destination: `/app/navigation/${sessionId}/position`,
+                    body: JSON.stringify({ latitude: lat, longitude: lng })
+                });
+            }
+        },
+        err => {
+            const msg = err.code === 1 ? 'Доступ к GPS запрещён' :
+                        err.code === 2 ? 'GPS недоступен' : 'Ошибка GPS';
+            setGpsStatus('error', msg);
+            log('warn', msg);
+        },
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+    );
+}
+
+function stopGpsWatch() {
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+    currentGpsPos = null;
+    setGpsStatus('off', 'GPS не определён');
+}
+
+function setGpsStatus(state, text) {
+    const dot = document.getElementById('gps-dot');
+    const label = document.getElementById('gps-text');
+    label.textContent = text;
+    const colors = {
+        ok:        '#22c55e',
+        searching: '#f59e0b',
+        error:     '#ff4d6d',
+        off:       '#4a4f6a'
+    };
+    dot.style.background = colors[state] || '#4a4f6a';
+    dot.style.boxShadow = state === 'ok'
+        ? '0 0 6px #22c55e88' : state === 'searching'
+        ? '0 0 6px #f59e0b88' : 'none';
+    if (state === 'searching') {
+        dot.style.animation = 'pulse 1s infinite';
+    } else {
+        dot.style.animation = 'none';
+    }
+}
+
+function toggleSimPanel() {
+    const body = document.getElementById('sim-body');
+    const icon = document.getElementById('sim-toggle');
+    const open = body.style.display === 'none';
+    body.style.display = open ? 'block' : 'none';
+    icon.textContent = open ? '▾' : '▸';
+}
+
+// ────────────────────────────────────────────────
+// Boot
+// ────────────────────────────────────────────────
+initMap();
+startGpsWatch();
+</script>
+</body>
+</html>
