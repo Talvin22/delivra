@@ -636,7 +636,6 @@ async function startNavigation() {
     taskId = parseInt(document.getElementById('task-id').value);
     if (!taskId) { toast('Введите Task ID', 'error'); return; }
 
-    // Берём GPS позицию — если ещё не получена, запрашиваем разово
     let originLat, originLng;
     if (currentGpsPos) {
         originLat = currentGpsPos.lat;
@@ -985,8 +984,11 @@ function startGpsWatch() {
             document.getElementById('info-pos').textContent =
                 `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 
-            // При первом сигнале центрируем карту (если навигация ещё не запущена)
-            if (isFirst && !sessionId) {
+            if (sessionId) {
+                // Навигация активна — карта следует за водителем
+                map.panTo([lat, lng]);
+            } else if (isFirst) {
+                // Первый GPS сигнал до навигации — просто центрируем
                 setTimeout(() => {
                     map.invalidateSize();
                     map.setView([lat, lng], 14);
