@@ -443,7 +443,15 @@
     </div>
 
     <!-- Map -->
-    <div id="map"></div>
+    <div id="map" style="position:relative;">
+        <button id="btn-recenter" onclick="enableFollowMode()" title="Вернуться к своей позиции"
+            style="display:none; position:absolute; bottom:24px; right:16px; z-index:1000;
+                   width:44px; height:44px; border-radius:50%;
+                   background:#1a1d2e; border:2px solid #6c8aff;
+                   color:#6c8aff; font-size:20px; cursor:pointer;
+                   align-items:center; justify-content:center;
+                   box-shadow:0 2px 10px #00000088;">⊙</button>
+    </div>
 
     <!-- Chat -->
     <div class="chat-panel">
@@ -490,6 +498,9 @@ let currentGpsPos = null;    // { lat, lng } — последняя позици
 // Map objects
 let map, driverMarker, destMarker, routeLayer;
 
+// Follow mode: карта следует за водителем
+let followMode = false;
+
 // ────────────────────────────────────────────────
 // Init map
 // ────────────────────────────────────────────────
@@ -502,6 +513,14 @@ function initMap() {
         maxZoom: 19
     }).addTo(map);
 
+    // Если пользователь перетащил карту вручную — отключаем следование
+    map.on('dragstart', () => {
+        if (followMode) {
+            followMode = false;
+            document.getElementById('btn-recenter').style.display = 'flex';
+        }
+    });
+
     map.on('click', e => {
         if (clickModeActive) {
             document.getElementById('sim-lat').value = e.latlng.lat.toFixed(6);
@@ -512,6 +531,14 @@ function initMap() {
             toast('Координаты выбраны — нажмите «Отправить позицию»', 'success');
         }
     });
+}
+
+function enableFollowMode() {
+    followMode = true;
+    document.getElementById('btn-recenter').style.display = 'none';
+    if (currentGpsPos) {
+        map.setView([currentGpsPos.lat, currentGpsPos.lng], map.getZoom(), { animate: true });
+    }
 }
 
 function toggleClickMode() {
@@ -682,9 +709,13 @@ async function startNavigation() {
         document.getElementById('chat-task-label').textContent = `Task #${taskId}`;
         document.getElementById('nav-dot').classList.add('navigating');
 
+        // Включаем режим слежения за водителем
+        followMode = true;
+        document.getElementById('btn-recenter').style.display = 'none';
+
         // Always place driver marker at origin, regardless of route
         updateDriverMarker(originLat, originLng);
-        map.setView([originLat, originLng], 14);
+        map.setView([originLat, originLng], 15);
         document.getElementById('info-pos').textContent = `${originLat.toFixed(5)}, ${originLng.toFixed(5)}`;
 
         // Draw route if returned
@@ -723,6 +754,8 @@ async function endNavigation() {
         toast('Навигация завершена', 'success');
 
         sessionId = null;
+        followMode = false;
+        document.getElementById('btn-recenter').style.display = 'none';
         document.getElementById('info-session').textContent = '—';
         document.getElementById('info-status').textContent = 'COMPLETED';
         document.getElementById('info-status').className = 'info-value';
@@ -984,14 +1017,14 @@ function startGpsWatch() {
             document.getElementById('info-pos').textContent =
                 `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 
-            if (sessionId) {
-                // Навигация активна — карта следует за водителем
-                map.panTo([lat, lng]);
-            } else if (isFirst) {
-                // Первый GPS сигнал до навигации — просто центрируем
+            if (followMode) {
+                // Навигация активна и режим слежения включён — карта следует за водителем
+                map.setView([lat, lng], map.getZoom(), { animate: true, duration: 0.5 });
+            } else if (isFirst && !sessionId) {
+                // Первый GPS сигнал до навигации — просто центрируем один раз
                 setTimeout(() => {
                     map.invalidateSize();
-                    map.setView([lat, lng], 14);
+                    map.setView([lat, lng], 15);
                 }, 50);
             }
 
