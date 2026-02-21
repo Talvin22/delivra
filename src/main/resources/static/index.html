@@ -91,7 +91,9 @@
         .toast.success { border-color: #22c55e66; color: #22c55e; }
 
         /* ─── Marker ─── */
-        .nav-arrow { transition: transform 0.2s ease-out; filter: drop-shadow(0 2px 6px rgba(108,138,255,0.6)); }
+        .nav-arrow { transition: transform 0.3s ease-out; filter: drop-shadow(0 2px 6px rgba(108,138,255,0.6)); }
+        /* Плавное движение маркера между GPS-точками (не влияет на zoom-анимацию Leaflet) */
+        .driver-marker-pos { transition: transform 0.5s linear; will-change: transform; }
 
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -473,6 +475,8 @@ let sessionId = null, taskId = null, rerouteCount = 0;
 let clickModeActive = false, followMode = false, lastHeading = 0;
 let watchId = null, currentGpsPos = null;
 let map, driverMarker, destMarker, routeLayer;
+let wakeLock = null;
+let lastGpsTime = 0, gpsWatchdog = null;
 
 const isMobile = () => window.innerWidth <= 768;
 
@@ -674,6 +678,7 @@ async function startNavigation() {
 
         subscribeToTask(taskId);
         loadChatHistory();
+        requestWakeLock();
     } catch (e) { toast(e.message, 'error'); log('error', e.message); }
 }
 
@@ -702,6 +707,7 @@ async function endNavigation() {
 
         toast('Навигация завершена', 'success');
         log('success', 'Навигация завершена');
+        releaseWakeLock();
     } catch (e) { toast(e.message, 'error'); }
 }
 
@@ -781,7 +787,8 @@ function updateDriverMarker(lat, lng) {
             icon: L.divIcon({
                 className: '',
                 html: `<svg class="nav-arrow" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="rgba(108,138,255,0.15)"/><circle cx="20" cy="20" r="12" fill="#6c8aff" stroke="white" stroke-width="2.5"/><path d="M20 6 L27 21 L20 17 L13 21 Z" fill="white"/></svg>`,
-                iconSize: [40,40], iconAnchor: [20,20]
+                iconSize: [40,40], iconAnchor: [20,20],
+                className: 'driver-marker-pos'
             }),
             zIndexOffset: 1000
         }).addTo(map).bindPopup('Водитель');
@@ -867,21 +874,60 @@ function formatDuration(sec) { const h=Math.floor(sec/3600),m=Math.floor((sec%36
 function formatTime(s) { if (!s) return ''; try { return new Date(s).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'}); } catch { return ''; } }
 function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// ─── Wake Lock ───
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator && !wakeLock) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLock.addEventListener('release', () => { wakeLock = null; });
+            log('info', 'Экран заблокирован от сна');
+        }
+    } catch { /* не критично */ }
+}
+async function releaseWakeLock() {
+    if (wakeLock) { try { await wakeLock.release(); } catch {} wakeLock = null; }
+}
+// Переповторяем wake lock при возврате в приложение (Android Chrome часто снимает его при сворачивании)
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && sessionId) requestWakeLock();
+});
+
+// ─── GPS Watchdog ───
+function startGpsWatchdog() {
+    stopGpsWatchdog();
+    lastGpsTime = Date.now();
+    gpsWatchdog = setInterval(() => {
+        if (Date.now() - lastGpsTime > 20000) {
+            log('warn', 'GPS не отвечает 20с — перезапуск...');
+            setGpsStatus('searching', 'GPS перезапуск...');
+            if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+            stopGpsWatchdog();
+            setTimeout(startGpsWatch, 300);
+        }
+    }, 5000);
+}
+function stopGpsWatchdog() {
+    if (gpsWatchdog) { clearInterval(gpsWatchdog); gpsWatchdog = null; }
+}
+
 // ─── GPS ───
 function startGpsWatch() {
     if (!navigator.geolocation) { setGpsStatus('error','GPS не поддерживается'); return; }
     setGpsStatus('searching','Определяю позицию...');
     watchId = navigator.geolocation.watchPosition(
         pos => {
+            lastGpsTime = Date.now(); // сбрасываем watchdog
             const lat = pos.coords.latitude, lng = pos.coords.longitude;
             const isFirst = !currentGpsPos;
 
-            // Обновляем курс ДО обновления currentGpsPos
-            if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && (pos.coords.speed||0) > 0.3) {
+            // Обновляем курс только при реальном движении (speed > 1 м/с ≈ 4 км/ч).
+            // Расчёт по дельте позиций НЕ используем — GPS-шум (5–15 м) больше
+            // реального смещения за 1с и даёт случайный угол.
+            const spd = pos.coords.speed || 0;
+            if (spd > 1.0 && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
                 updateMarkerHeading(pos.coords.heading);
-            } else if (currentGpsPos && Math.hypot(lat-currentGpsPos.lat, lng-currentGpsPos.lng) > 0.00002) {
-                updateMarkerHeading(calculateBearing(currentGpsPos.lat, currentGpsPos.lng, lat, lng));
             }
+            // Если скорость ниже или heading недоступен — оставляем последний угол
 
             currentGpsPos = { lat, lng };
             setGpsStatus('ok', `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
@@ -894,14 +940,29 @@ function startGpsWatch() {
                 setTimeout(() => { map.invalidateSize(); map.setView([lat,lng],15); }, 50);
             }
 
-            if (sessionId && stompClient?.connected)
-                stompClient.publish({ destination: `/app/navigation/${sessionId}/position`, body: JSON.stringify({ latitude: lat, longitude: lng }) });
+            try {
+                if (sessionId && stompClient?.connected)
+                    stompClient.publish({ destination: `/app/navigation/${sessionId}/position`, body: JSON.stringify({ latitude: lat, longitude: lng }) });
+            } catch (e) { log('warn', 'WS publish: ' + e.message); }
         },
-        err => setGpsStatus('error', err.code===1?'Доступ к GPS запрещён':err.code===2?'GPS недоступен':'Ошибка GPS'),
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+        err => {
+            if (err.code === 1) {
+                setGpsStatus('error', 'Доступ к GPS запрещён');
+            } else if (err.code === 2) {
+                setGpsStatus('error', 'GPS недоступен');
+            } else {
+                // Timeout (code 3) — просто перезапускаем watchPosition
+                log('warn', 'GPS timeout — перезапуск...');
+                if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+                setTimeout(startGpsWatch, 500);
+            }
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
     );
+    startGpsWatchdog();
 }
 function stopGpsWatch() {
+    stopGpsWatchdog();
     if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
     currentGpsPos = null; setGpsStatus('off','GPS не определён');
 }
