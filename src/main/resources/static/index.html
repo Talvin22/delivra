@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Delivra Navigator</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.css"/>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -94,6 +95,25 @@
         .nav-arrow { transition: transform 0.3s ease-out; filter: drop-shadow(0 2px 6px rgba(108,138,255,0.6)); }
         /* Плавное движение маркера между GPS-точками (не влияет на zoom-анимацию Leaflet) */
         .driver-marker-pos { transition: transform 0.5s linear; will-change: transform; }
+
+        /* ─── Instruction Bar ─── */
+        #instruction-bar {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            z-index: 500; background: rgba(26,29,46,0.96); border: 1px solid #2d3148;
+            border-radius: 14px; padding: 10px 16px;
+            display: none; align-items: center; gap: 12px;
+            min-width: 240px; max-width: calc(100vw - 32px);
+            backdrop-filter: blur(12px); box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+            pointer-events: none;
+            top: 110px; /* mobile: below header + nav info bar */
+        }
+        @media (min-width: 769px) {
+            #instruction-bar { top: 16px; } /* desktop: #map-wrap starts below header */
+        }
+        #instruction-icon { font-size: 26px; flex-shrink: 0; line-height: 1; }
+        #instruction-body { flex: 1; min-width: 0; }
+        #instruction-text { font-size: 13px; font-weight: 600; color: #e2e8f0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #instruction-dist { font-size: 12px; color: #6c8aff; margin-top: 2px; }
 
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -346,6 +366,13 @@
     <!-- Map -->
     <div id="map-wrap">
         <div id="map"></div>
+        <div id="instruction-bar">
+            <div id="instruction-icon">↑</div>
+            <div id="instruction-body">
+                <div id="instruction-text">Следуйте по маршруту</div>
+                <div id="instruction-dist"></div>
+            </div>
+        </div>
         <button id="btn-recenter" onclick="enableFollowMode()" title="К своей позиции">⊙</button>
     </div>
 
@@ -465,6 +492,7 @@
 
 <!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
 <script>
@@ -477,6 +505,10 @@ let watchId = null, currentGpsPos = null;
 let map, driverMarker, destMarker, routeLayer;
 let wakeLock = null;
 let lastGpsTime = 0, gpsWatchdog = null;
+
+// ─── Route data ───
+let routeWaypoints = [], routeInstructions = [], instrCumDist = [];
+let totalRouteDist = 0, totalRouteDur = 0, currentInstrIdx = 0;
 
 const isMobile = () => window.innerWidth <= 768;
 
@@ -493,7 +525,7 @@ function setInfo(key, value, cls) {
 
 // ─── Map ───
 function initMap() {
-    map = L.map('map', { zoomControl: true }).setView([50.45, 30.52], 12);
+    map = L.map('map', { zoomControl: true, rotate: true, bearing: 0 }).setView([50.45, 30.52], 12);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19
     }).addTo(map);
@@ -737,34 +769,53 @@ function doSendPosition(lat, lng) {
 // ─── WS handlers ───
 function onPositionEvent(event) {
     const { latitude: lat, longitude: lng, onRoute } = event;
-    const posStr = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-    setInfo('pos', posStr);
-    if (onRoute) setInfo('route', $id('info-route').textContent, 'on-route');
+    setInfo('pos', `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    if (onRoute) {
+        setInfo('status', 'ACTIVE', 'on-route');
+        updateNavProgress(lat, lng);
+    } else {
+        setInfo('status', 'Вне маршрута', 'off-route');
+    }
 }
 function onRouteUpdateEvent(event) {
     const { latitude: lat, longitude: lng, route } = event;
     rerouteCount++;
     setInfo('pos', `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-    setInfo('route', 'Перестройка!', 'off-route');
     $id('info-reroutes').textContent = rerouteCount;
     $id('mob-info-reroutes').textContent = rerouteCount;
-    if (route) drawRoute(route, lat, lng);
+    if (route) {
+        drawRoute(route, lat, lng);
+        const d = route.distanceInMeters ? `${(route.distanceInMeters/1000).toFixed(1)} км` : '?';
+        const t = route.durationInSeconds ? formatDuration(route.durationInSeconds) : '?';
+        setInfo('route', `${d} · ${t}`, 'on-route');
+        const mobRoute = $id('mob-info-route');
+        if (mobRoute) mobRoute.textContent = `${d} · ${t}`;
+    }
+    setInfo('status', 'ACTIVE', 'on-route');
     toast('Маршрут перестроен!', 'warn');
     log('warn', 'Перестройка маршрута');
-    setTimeout(() => {
-        if (route) {
-            const d = route.distanceInMeters ? `${(route.distanceInMeters/1000).toFixed(1)} км` : '?';
-            const t = route.durationInSeconds ? formatDuration(route.durationInSeconds) : '?';
-            setInfo('route', `${d} · ${t}`, 'on-route');
-            $id('mob-info-route').textContent = `${d} · ${t}`;
-        }
-    }, 3000);
 }
 
 // ─── Map drawing ───
 function drawRoute(route, oLat, oLng) {
     if (routeLayer) map.removeLayer(routeLayer);
     const wpts = route.waypoints || [];
+
+    // Store globally for trimming + progress calc
+    routeWaypoints = wpts;
+    routeInstructions = route.instructions || [];
+    totalRouteDist = route.distanceInMeters || 0;
+    totalRouteDur  = route.durationInSeconds || 0;
+    currentInstrIdx = 0;
+
+    // Build cumulative distance thresholds per instruction
+    instrCumDist = [];
+    let cumDist = 0;
+    routeInstructions.forEach(instr => {
+        instrCumDist.push(cumDist);
+        cumDist += (instr.distanceInMeters || 0);
+    });
+
     if (wpts.length > 0) {
         routeLayer = L.polyline(wpts.map(w => [w.lat, w.lng]), { color: '#6c8aff', weight: 5, opacity: 0.85 }).addTo(map);
     }
@@ -778,7 +829,10 @@ function drawRoute(route, oLat, oLng) {
     updateDriverMarker(oLat, oLng);
     const dist = route.distanceInMeters ? `${(route.distanceInMeters/1000).toFixed(1)} км` : '—';
     const dur  = route.durationInSeconds ? formatDuration(route.durationInSeconds) : '—';
-    log('info', `Маршрут: ${dist}, ~${dur} | ${wpts.length} точек`);
+    log('info', `Маршрут: ${dist}, ~${dur} | ${wpts.length} точек | ${routeInstructions.length} подсказок`);
+
+    // Show first instruction
+    if (routeInstructions.length > 0) showInstruction(0, 0);
 }
 
 function updateDriverMarker(lat, lng) {
@@ -814,6 +868,98 @@ function updateMarkerHeading(deg) {
 function calculateBearing(lat1, lng1, lat2, lng2) {
     const dL = (lng2-lng1)*Math.PI/180, r1 = lat1*Math.PI/180, r2 = lat2*Math.PI/180;
     return (Math.atan2(Math.sin(dL)*Math.cos(r2), Math.cos(r1)*Math.sin(r2)-Math.sin(r1)*Math.cos(r2)*Math.cos(dL))*180/Math.PI+360)%360;
+}
+
+// ─── Navigation progress helpers ───
+
+function haversineM(lat1, lng1, lat2, lng2) {
+    const R = 6371000;
+    const φ1 = lat1*Math.PI/180, φ2 = lat2*Math.PI/180;
+    const Δφ = (lat2-lat1)*Math.PI/180, Δλ = (lng2-lng1)*Math.PI/180;
+    const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function closestWptIdx(lat, lng) {
+    let minD = Infinity, minI = 0;
+    for (let i = 0; i < routeWaypoints.length; i++) {
+        const d = haversineM(lat, lng, routeWaypoints[i].lat, routeWaypoints[i].lng);
+        if (d < minD) { minD = d; minI = i; }
+    }
+    return minI;
+}
+
+function trimRouteToPosition(lat, lng) {
+    if (routeWaypoints.length < 2 || !routeLayer) return;
+    const idx = closestWptIdx(lat, lng);
+    if (idx <= 0) return;
+    const remaining = routeWaypoints.slice(idx);
+    if (remaining.length < 2) return;
+    map.removeLayer(routeLayer);
+    routeLayer = L.polyline(remaining.map(w => [w.lat, w.lng]), { color: '#6c8aff', weight: 5, opacity: 0.85 }).addTo(map);
+}
+
+function calcRemainingDist(lat, lng) {
+    if (routeWaypoints.length < 2) return 0;
+    const idx = closestWptIdx(lat, lng);
+    let dist = haversineM(lat, lng, routeWaypoints[idx].lat, routeWaypoints[idx].lng);
+    for (let i = idx; i < routeWaypoints.length - 1; i++) {
+        dist += haversineM(routeWaypoints[i].lat, routeWaypoints[i].lng, routeWaypoints[i+1].lat, routeWaypoints[i+1].lng);
+    }
+    return dist;
+}
+
+function getActionIcon(action) {
+    const icons = {
+        depart: '▶', arrive: '⭐', turnLeft: '←', turnRight: '→',
+        sharpTurnLeft: '↰', sharpTurnRight: '↱', slightTurnLeft: '↖',
+        slightTurnRight: '↗', keepLeft: '↖', keepRight: '↗',
+        uTurn: '↩', roundaboutExit: '↻', continue: '↑',
+        merge: '↗', motorwayEnter: '↑', motorwayExit: '↗'
+    };
+    return icons[action] || '↑';
+}
+
+function showInstruction(distTraveled) {
+    if (routeInstructions.length === 0) return;
+    // Find which instruction range we're in, then show the next one
+    let instrIdx = 0;
+    for (let i = 0; i < instrCumDist.length; i++) {
+        if (instrCumDist[i] <= distTraveled) instrIdx = i;
+        else break;
+    }
+    const nextIdx = Math.min(instrIdx + 1, routeInstructions.length - 1);
+    const instr = routeInstructions[nextIdx];
+    if (!instr) return;
+
+    const bar = $id('instruction-bar');
+    bar.style.display = 'flex';
+    $id('instruction-icon').textContent = getActionIcon(instr.action);
+    $id('instruction-text').textContent = instr.instruction || '—';
+
+    const distToInstr = Math.max(0, (instrCumDist[nextIdx] || totalRouteDist) - distTraveled);
+    $id('instruction-dist').textContent = distToInstr > 1000
+        ? `через ${(distToInstr/1000).toFixed(1)} км`
+        : `через ${Math.round(distToInstr)} м`;
+}
+
+function updateNavProgress(lat, lng) {
+    if (routeWaypoints.length < 2) return;
+    trimRouteToPosition(lat, lng);
+    const remainingM = calcRemainingDist(lat, lng);
+    const distTraveled = Math.max(0, totalRouteDist - remainingM);
+
+    const remainingSec = totalRouteDist > 0 && totalRouteDur > 0
+        ? Math.round(totalRouteDur * (remainingM / totalRouteDist)) : 0;
+
+    const distStr = remainingM >= 1000 ? `${(remainingM/1000).toFixed(1)} км` : `${Math.round(remainingM)} м`;
+    const timeStr = remainingSec > 0 ? formatDuration(remainingSec) : '—';
+    const routeStr = `${distStr} · ${timeStr}`;
+    setInfo('route', routeStr, 'on-route');
+    const mobRoute = $id('mob-info-route');
+    if (mobRoute) mobRoute.textContent = routeStr;
+
+    showInstruction(distTraveled);
 }
 
 // ─── Chat ───

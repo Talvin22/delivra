@@ -26,6 +26,8 @@ import site.delivra.application.utils.GeoUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -38,6 +40,9 @@ public class NavigationServiceImpl implements NavigationService {
 
     @Value("${navigation.off-route-threshold-meters:200}")
     private double offRouteThresholdMeters;
+
+    private final Map<Integer, Long> lastRerouteBySession = new ConcurrentHashMap<>();
+    private static final long REROUTE_COOLDOWN_MS = 30_000L;
 
     @Override
     @Transactional
@@ -89,6 +94,7 @@ public class NavigationServiceImpl implements NavigationService {
         session.setStatus(NavigationSessionStatus.COMPLETED);
         session.setEndedAt(LocalDateTime.now());
         sessionRepository.save(session);
+        lastRerouteBySession.remove(session.getId());
 
         log.info("Navigation ended: sessionId={}, taskId={}", session.getId(), taskId);
         return DelivraResponse.createSuccessful(toDto(session, null));
@@ -141,26 +147,52 @@ public class NavigationServiceImpl implements NavigationService {
                     .build();
         }
 
-        // Off-route: recalculate
+        // Off-route: check cooldown before expensive HERE API call
+        long now = System.currentTimeMillis();
+        Long lastReroute = lastRerouteBySession.get(sessionId);
+        if (lastReroute != null && now - lastReroute < REROUTE_COOLDOWN_MS) {
+            log.debug("Reroute cooldown active for session {}, skipping", sessionId);
+            return NavigationEventDTO.builder()
+                    .type(NavigationEventDTO.Type.POSITION)
+                    .taskId(taskId)
+                    .latitude(lat)
+                    .longitude(lng)
+                    .onRoute(false)
+                    .build();
+        }
+
         log.info("Driver off route: sessionId={}, dist={}m — recalculating", sessionId, distanceFromRoute);
-        DeliveryTask task = session.getDeliveryTask();
-        RouteDTO newRoute = hereApiService.calculateTruckRoute(
-                lat, lng,
-                task.getLatitude(), task.getLongitude(),
-                null, null, null, null
-        );
+        lastRerouteBySession.put(sessionId, now);
 
-        session.setEncodedPolyline(newRoute.getPolyline());
-        sessionRepository.save(session);
+        try {
+            DeliveryTask task = session.getDeliveryTask();
+            RouteDTO newRoute = hereApiService.calculateTruckRoute(
+                    lat, lng,
+                    task.getLatitude(), task.getLongitude(),
+                    null, null, null, null
+            );
 
-        return NavigationEventDTO.builder()
-                .type(NavigationEventDTO.Type.ROUTE_UPDATE)
-                .taskId(taskId)
-                .latitude(lat)
-                .longitude(lng)
-                .onRoute(false)
-                .route(newRoute)
-                .build();
+            session.setEncodedPolyline(newRoute.getPolyline());
+            sessionRepository.save(session);
+
+            return NavigationEventDTO.builder()
+                    .type(NavigationEventDTO.Type.ROUTE_UPDATE)
+                    .taskId(taskId)
+                    .latitude(lat)
+                    .longitude(lng)
+                    .onRoute(false)
+                    .route(newRoute)
+                    .build();
+        } catch (Exception e) {
+            log.warn("Reroute failed for session {}: {}", sessionId, e.getMessage());
+            return NavigationEventDTO.builder()
+                    .type(NavigationEventDTO.Type.POSITION)
+                    .taskId(taskId)
+                    .latitude(lat)
+                    .longitude(lng)
+                    .onRoute(false)
+                    .build();
+        }
     }
 
     private NavigationSessionDTO toDto(NavigationSession session, RouteDTO route) {
