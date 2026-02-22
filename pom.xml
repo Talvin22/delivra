@@ -161,6 +161,37 @@
 
     <build>
         <plugins>
+            <!-- ═══ Frontend build (React → static/) ═══ -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>1.15.1</version>
+                <configuration>
+                    <workingDirectory>frontend</workingDirectory>
+                    <installDirectory>target</installDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-node-and-pnpm</id>
+                        <goals><goal>install-node-and-pnpm</goal></goals>
+                        <configuration>
+                            <nodeVersion>v20.11.0</nodeVersion>
+                            <pnpmVersion>9.15.9</pnpmVersion>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>pnpm-install</id>
+                        <goals><goal>pnpm</goal></goals>
+                        <configuration><arguments>install --frozen-lockfile</arguments></configuration>
+                    </execution>
+                    <execution>
+                        <id>pnpm-build</id>
+                        <goals><goal>pnpm</goal></goals>
+                        <configuration><arguments>run build</arguments></configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>

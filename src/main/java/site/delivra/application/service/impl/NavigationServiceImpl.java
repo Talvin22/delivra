@@ -107,7 +107,16 @@ public class NavigationServiceImpl implements NavigationService {
                 .orElseThrow(() -> new NotFoundException(
                         ApiErrorMessage.NAVIGATION_SESSION_NOT_FOUND.getMessage(taskId)));
 
-        return DelivraResponse.createSuccessful(toDto(session, null));
+        RouteDTO route = null;
+        if (session.getEncodedPolyline() != null) {
+            List<FlexiblePolylineDecoder.Waypoint> waypoints = FlexiblePolylineDecoder.decode(session.getEncodedPolyline());
+            route = RouteDTO.builder()
+                    .polyline(session.getEncodedPolyline())
+                    .waypoints(waypoints)
+                    .build();
+        }
+
+        return DelivraResponse.createSuccessful(toDto(session, route));
     }
 
     @Override
