@@ -14,6 +14,7 @@ import site.delivra.application.model.dto.navigation.NavigationEventDTO;
 import site.delivra.application.model.dto.navigation.NavigationSessionDTO;
 import site.delivra.application.model.entities.DeliveryTask;
 import site.delivra.application.model.entities.NavigationSession;
+import site.delivra.application.model.enums.DeliveryTaskStatus;
 import site.delivra.application.model.enums.NavigationSessionStatus;
 import site.delivra.application.model.request.navigation.StartNavigationRequest;
 import site.delivra.application.model.response.DelivraResponse;
@@ -69,6 +70,10 @@ public class NavigationServiceImpl implements NavigationService {
         } catch (Exception e) {
             log.warn("Route calculation failed for task {}, starting session without route: {}", taskId, e.getMessage());
         }
+
+        // Mark task as IN_PROGRESS when navigation starts
+        task.setStatus(DeliveryTaskStatus.IN_PROGRESS);
+        taskRepository.save(task);
 
         NavigationSession session = new NavigationSession();
         session.setDeliveryTask(task);
@@ -136,12 +141,23 @@ public class NavigationServiceImpl implements NavigationService {
 
         session.setCurrentLatitude(lat);
         session.setCurrentLongitude(lng);
+        sessionRepository.save(session);
+
+        Integer taskId = session.getDeliveryTask().getId();
+
+        if (session.getEncodedPolyline() == null) {
+            return NavigationEventDTO.builder()
+                    .type(NavigationEventDTO.Type.POSITION)
+                    .taskId(taskId)
+                    .latitude(lat)
+                    .longitude(lng)
+                    .onRoute(true)
+                    .build();
+        }
 
         List<FlexiblePolylineDecoder.Waypoint> waypoints = FlexiblePolylineDecoder.decode(session.getEncodedPolyline());
         double distanceFromRoute = GeoUtils.minDistanceToPolyline(lat, lng, waypoints);
         boolean onRoute = distanceFromRoute < offRouteThresholdMeters;
-
-        sessionRepository.save(session);
 
         Integer taskId = session.getDeliveryTask().getId();
 
@@ -156,7 +172,6 @@ public class NavigationServiceImpl implements NavigationService {
                     .build();
         }
 
-        // Off-route: check cooldown before expensive HERE API call
         long now = System.currentTimeMillis();
         Long lastReroute = lastRerouteBySession.get(sessionId);
         if (lastReroute != null && now - lastReroute < REROUTE_COOLDOWN_MS) {
