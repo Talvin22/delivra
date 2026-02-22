@@ -16,7 +16,7 @@ interface Props {
 
 export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
   const user = useAuthStore(s => s.user)
-  const { subscribe, publish } = useWsStore()
+  const { subscribe, publish, connected } = useWsStore()
   const [messages, setMessages] = useState<ChatMessageDTO[]>([])
   const [text, setText] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -83,18 +83,26 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
         <div ref={bottomRef} />
       </div>
 
+      {/* Connection status */}
+      {!connected && (
+        <div className="px-3 py-1.5 bg-warning/10 border-t border-warning/20 flex-shrink-0">
+          <p className="text-xs text-warning text-center">Нет подключения — сообщения недоступны</p>
+        </div>
+      )}
+
       {/* Input */}
       <div className="flex items-center gap-2 p-3 border-t border-bg-border flex-shrink-0">
         <input
-          className="flex-1 bg-bg-base border border-bg-border rounded-full px-4 py-2 text-sm text-text-primary placeholder:text-text-muted outline-none focus:border-brand transition-colors"
-          placeholder="Сообщение..."
+          className="flex-1 bg-bg-base border border-bg-border rounded-full px-4 py-2 text-sm text-text-primary placeholder:text-text-muted outline-none focus:border-brand transition-colors disabled:opacity-50"
+          placeholder={connected ? 'Сообщение...' : 'Нет подключения...'}
           value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && send()}
+          disabled={!connected}
         />
         <button
           onClick={send}
-          disabled={!text.trim()}
+          disabled={!text.trim() || !connected}
           className="w-9 h-9 rounded-full bg-brand flex items-center justify-center text-white disabled:opacity-40 transition-opacity"
         >
           <Send size={15} />
