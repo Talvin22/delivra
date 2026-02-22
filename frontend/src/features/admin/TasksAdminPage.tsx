@@ -44,7 +44,7 @@ export function TasksAdminPage() {
   const STATUSES: (DeliveryTaskStatus | 'ALL')[] = ['ALL', 'IN_PROGRESS', 'PENDING', 'COMPLETED', 'CANCELED']
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto">
+    <div className="h-full overflow-y-auto p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold text-text-primary">Задачи</h1>
         <span className="text-sm text-text-muted">{filtered.length} записей</span>

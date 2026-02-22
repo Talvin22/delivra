@@ -1,7 +1,9 @@
-// Side-effect-only plugin (patches L.Map prototype)
+// Without export {}, this file is a global script and declare module replaces leaflet types.
+// With export {}, this becomes a module file and declare module augments existing types.
+export {}
+
 declare module 'leaflet-rotate'
 
-// Augment leaflet types for leaflet-rotate plugin
 declare module 'leaflet' {
   interface MapOptions {
     rotate?: boolean

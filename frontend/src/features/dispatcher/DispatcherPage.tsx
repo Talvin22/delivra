@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
-import { Plus, MessageSquare, Filter, RefreshCw } from 'lucide-react'
+import { Plus, MessageSquare, ChevronRight, RefreshCw } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 import { tasksApi } from '@/api/tasks'
 import { usersApi } from '@/api/users'
@@ -19,12 +19,12 @@ const STATUS_BADGE: Record<DeliveryTaskStatus, 'brand'|'warning'|'success'|'dang
   IN_PROGRESS: 'brand', PENDING: 'warning', COMPLETED: 'success', CANCELED: 'danger',
 }
 
-function makeDriverMapIcon(username: string) {
+function makeDriverMapIcon(label: string) {
   return L.divIcon({
     className: '',
     html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
       <div style="width:32px;height:32px;background:#6c8aff;border-radius:50%;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(108,138,255,0.5)">🚛</div>
-      <div style="background:rgba(26,29,46,0.9);color:#e2e8f0;font-size:10px;font-weight:600;padding:1px 5px;border-radius:4px;white-space:nowrap;border:1px solid #2d3148">${username}</div>
+      <div style="background:rgba(26,29,46,0.9);color:#e2e8f0;font-size:10px;font-weight:600;padding:1px 5px;border-radius:4px;white-space:nowrap;border:1px solid #2d3148">${label}</div>
     </div>`,
     iconSize: [60, 48],
     iconAnchor: [30, 48],
@@ -45,13 +45,11 @@ export function DispatcherPage() {
   const { subscribe } = useWsStore()
 
   const [driverPositions, setDriverPositions] = useState<Map<number, DriverPosition>>(new Map())
-  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
   const [chatTaskId, setChatTaskId] = useState<number | null>(null)
   const [taskFormOpen, setTaskFormOpen] = useState(false)
   const [filterStatus, setFilterStatus] = useState<DeliveryTaskStatus | 'ALL'>('ALL')
-  const [showPanel, setShowPanel] = useState(true)
+  const [panelOpen, setPanelOpen] = useState(true)
 
-  // Tasks
   const { data: tasks, isLoading, refetch } = useQuery({
     queryKey: ['dispatcher-tasks'],
     queryFn: async () => {
@@ -61,7 +59,6 @@ export function DispatcherPage() {
     refetchInterval: 30_000,
   })
 
-  // Users (for task form driver assignment)
   const { data: drivers } = useQuery({
     queryKey: ['drivers'],
     queryFn: async () => {
@@ -70,7 +67,6 @@ export function DispatcherPage() {
     },
   })
 
-  // Subscribe to all IN_PROGRESS task positions
   useEffect(() => {
     if (!tasks) return
     const inProgress = tasks.filter(t => t.status === 'IN_PROGRESS')
@@ -82,7 +78,7 @@ export function DispatcherPage() {
           next.set(task.id, {
             taskId: task.id,
             userId: task.userId,
-            username: `Задача #${task.id}`,
+            username: `#${task.id}`,
             lat: ev.latitude,
             lng: ev.longitude,
             onRoute: ev.onRoute,
@@ -100,20 +96,26 @@ export function DispatcherPage() {
   }, [qc])
 
   const filtered = (tasks ?? []).filter(t => filterStatus === 'ALL' || t.status === filterStatus)
-
   const STATUSES: (DeliveryTaskStatus | 'ALL')[] = ['ALL', 'IN_PROGRESS', 'PENDING', 'COMPLETED', 'CANCELED']
 
   return (
-    <div className="flex h-full">
-      {/* Map */}
-      <div className="flex-1 relative">
-        <MapContainer center={[50.45, 30.52]} zoom={12} className="w-full h-full" zoomControl={false}>
+    // absolute inset-0: fills the relative main container completely — no flex height issues
+    <div className="absolute inset-0">
+
+      {/* ── Map layer (always full screen behind panel) ── */}
+      <div className="absolute inset-0">
+        <MapContainer
+          center={[50.45, 30.52]}
+          zoom={12}
+          className="w-full h-full"
+          zoomControl={false}
+        >
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             attribution="&copy; OpenStreetMap &copy; CARTO"
             maxZoom={19}
           />
-          {/* Driver markers */}
+
           {Array.from(driverPositions.values()).map(dp => (
             <Marker key={dp.taskId} position={[dp.lat, dp.lng]} icon={makeDriverMapIcon(`#${dp.taskId}`)}>
               <Popup>
@@ -126,7 +128,7 @@ export function DispatcherPage() {
               </Popup>
             </Marker>
           ))}
-          {/* Destination markers for tasks with coords */}
+
           {(tasks ?? []).filter(t => t.latitude && t.longitude && t.status !== 'COMPLETED').map(t => (
             <Marker key={`dest-${t.id}`} position={[t.latitude!, t.longitude!]} icon={makeDestIcon()}>
               <Popup>
@@ -139,23 +141,24 @@ export function DispatcherPage() {
           ))}
         </MapContainer>
 
-        {/* Toggle panel button (mobile) */}
+        {/* Toggle panel button */}
         <button
-          onClick={() => setShowPanel(p => !p)}
-          className="absolute bottom-4 left-4 z-[500] w-10 h-10 rounded-full bg-bg-surface border border-bg-border shadow-lg flex items-center justify-center text-text-secondary md:hidden"
+          onClick={() => setPanelOpen(p => !p)}
+          className="absolute top-4 left-4 z-[500] w-10 h-10 rounded-full bg-bg-surface border border-bg-border shadow-lg flex items-center justify-center text-text-secondary hover:text-brand transition-colors"
+          title={panelOpen ? 'Скрыть панель' : 'Показать панель'}
         >
-          <Filter size={16} />
+          <ChevronRight size={16} className={cn('transition-transform', panelOpen ? 'rotate-180' : '')} />
         </button>
       </div>
 
-      {/* Right panel */}
+      {/* ── Right panel (absolute, overlays map on right side) ── */}
       <div className={cn(
-        'flex flex-col bg-bg-surface border-l border-bg-border',
-        'fixed inset-x-0 bottom-0 z-40 md:static md:w-80 md:flex',
-        showPanel ? 'flex' : 'hidden',
-        'md:h-full h-[65vh] rounded-t-xl md:rounded-none',
+        'absolute top-0 bottom-0 right-0 z-[500]',
+        'flex flex-col bg-bg-surface border-l border-bg-border shadow-2xl',
+        'w-80 transition-transform duration-200',
+        panelOpen ? 'translate-x-0' : 'translate-x-full',
       )}>
-        {/* Panel header */}
+        {/* Header */}
         <div className="flex items-center justify-between p-3 border-b border-bg-border flex-shrink-0">
           <span className="text-sm font-semibold text-text-primary">
             Задачи <span className="text-text-muted font-normal">({filtered.length})</span>
@@ -199,16 +202,13 @@ export function DispatcherPage() {
               <TaskRow
                 key={task.id}
                 task={task}
-                isSelected={selectedTaskId === task.id}
                 hasDriver={driverPositions.has(task.id)}
-                onClick={() => setSelectedTaskId(task.id === selectedTaskId ? null : task.id)}
                 onChat={() => setChatTaskId(task.id)}
               />
             ))
           )}
         </div>
 
-        {/* Active drivers summary */}
         {driverPositions.size > 0 && (
           <div className="p-2 border-t border-bg-border flex-shrink-0">
             <p className="text-xs text-text-muted">
@@ -218,7 +218,6 @@ export function DispatcherPage() {
         )}
       </div>
 
-      {/* Modals */}
       {taskFormOpen && (
         <TaskFormModal
           open={taskFormOpen}
@@ -228,29 +227,21 @@ export function DispatcherPage() {
         />
       )}
       {chatTaskId !== null && (
-        <ChatPanel taskId={chatTaskId} onClose={() => setChatTaskId(null)} />
+        <ChatPanel taskId={chatTaskId} onClose={() => setChatTaskId(null)} overlay />
       )}
     </div>
   )
 }
 
 function TaskRow({
-  task, isSelected, hasDriver, onClick, onChat,
+  task, hasDriver, onChat,
 }: {
   task: DeliveryTaskDTO
-  isSelected: boolean
   hasDriver: boolean
-  onClick: () => void
   onChat: () => void
 }) {
   return (
-    <div
-      className={cn(
-        'border-b border-bg-border transition-colors cursor-pointer',
-        isSelected ? 'bg-brand/5' : 'hover:bg-bg-raised',
-      )}
-      onClick={onClick}
-    >
+    <div className="border-b border-bg-border hover:bg-bg-raised transition-colors">
       <div className="flex items-start gap-2 p-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1">
@@ -262,7 +253,7 @@ function TaskRow({
           <p className="text-[10px] text-text-muted mt-0.5">{formatDateTime(task.created)}</p>
         </div>
         <button
-          onClick={e => { e.stopPropagation(); onChat() }}
+          onClick={onChat}
           className="p-1.5 rounded text-text-muted hover:text-brand hover:bg-brand/10 transition-colors flex-shrink-0"
         >
           <MessageSquare size={14} />

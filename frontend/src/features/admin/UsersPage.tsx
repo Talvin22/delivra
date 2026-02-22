@@ -39,7 +39,7 @@ export function UsersPage() {
   )
 
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto">
+    <div className="h-full overflow-y-auto p-4 md:p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold text-text-primary">Пользователи</h1>
         <Button size="sm" onClick={() => setCreateOpen(true)}>

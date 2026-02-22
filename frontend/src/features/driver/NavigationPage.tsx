@@ -19,10 +19,12 @@ import { FullScreenLoader } from '@/components/ui/Spinner'
 import type { NavigationEventDTO, RouteDTO, Waypoint } from '@/types/api'
 
 // ─── Driver SVG marker ────────────────────────────────────────────
-function makeDriverIcon(heading: number) {
+// leaflet-rotate rotates the entire map pane (including marker pane) by the bearing.
+// So the SVG must NOT have its own rotation — the map rotation already points it forward.
+function makeDriverIcon() {
   return L.divIcon({
     className: '',
-    html: `<svg style="transform:rotate(${heading}deg)" xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
+    html: `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
       <circle cx="22" cy="22" r="20" fill="rgba(108,138,255,0.15)"/>
       <circle cx="22" cy="22" r="13" fill="#6c8aff" stroke="white" stroke-width="2.5"/>
       <path d="M22 7 L30 23 L22 19 L14 23 Z" fill="white"/>
@@ -260,7 +262,7 @@ export function NavigationPage() {
 
         {/* Driver marker */}
         {driverPos && (
-          <Marker position={driverPos} icon={makeDriverIcon(heading)} zIndexOffset={1000} />
+          <Marker position={driverPos} icon={makeDriverIcon()} zIndexOffset={1000} />
         )}
 
         {/* Destination marker */}

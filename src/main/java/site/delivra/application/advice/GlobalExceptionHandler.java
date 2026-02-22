@@ -1,4 +1,4 @@
-package site.delivra.application.controller;
+package site.delivra.application.advice;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

@@ -28,7 +28,7 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto">
+    <div className="h-full overflow-y-auto p-4 md:p-6 max-w-5xl mx-auto">
       <h1 className="text-xl font-semibold text-text-primary mb-6">Дашборд</h1>
 
       {/* Stats grid */}

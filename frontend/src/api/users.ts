@@ -19,4 +19,7 @@ export const usersApi = {
 
   delete: (id: number) =>
     api.delete(`/users/${id}`),
+
+  updateRoles: (id: number, roles: string[]) =>
+    api.put<DelivraResponse<UserDTO>>(`/users/${id}/roles`, { roles }),
 }

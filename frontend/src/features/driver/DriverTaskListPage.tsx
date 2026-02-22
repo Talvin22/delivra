@@ -40,7 +40,7 @@ export function DriverTaskListPage() {
   if (isLoading) return <FullScreenLoader />
 
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto">
+    <div className="h-full overflow-y-auto p-4 md:p-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-text-primary">Мои задачи</h1>

@@ -8,6 +8,7 @@ import site.delivra.application.model.dto.user.UserDTO;
 import site.delivra.application.model.dto.user.UserSearchDTO;
 import site.delivra.application.model.request.user.NewUserRequest;
 import site.delivra.application.model.request.user.UpdateUserRequest;
+import site.delivra.application.model.request.user.UpdateUserRolesRequest;
 import site.delivra.application.model.request.user.UserSearchRequest;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.model.response.PaginationResponse;
@@ -21,6 +22,8 @@ public interface UserService extends UserDetailsService {
     DelivraResponse<UserDTO> updateUserById(@NotNull Integer userId, UpdateUserRequest updateUserRequest);
 
     void softDeleteUser(@NotNull Integer id);
+
+    DelivraResponse<UserDTO> updateUserRoles(@NotNull Integer userId, UpdateUserRolesRequest request);
 
     DelivraResponse<PaginationResponse<UserSearchDTO>> findAllUsers(Pageable pageable);
 

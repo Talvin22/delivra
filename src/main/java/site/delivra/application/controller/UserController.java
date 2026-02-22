@@ -13,6 +13,7 @@ import site.delivra.application.model.dto.user.UserDTO;
 import site.delivra.application.model.dto.user.UserSearchDTO;
 import site.delivra.application.model.request.user.NewUserRequest;
 import site.delivra.application.model.request.user.UpdateUserRequest;
+import site.delivra.application.model.request.user.UpdateUserRolesRequest;
 import site.delivra.application.model.request.user.UserSearchRequest;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.model.response.PaginationResponse;
@@ -55,6 +56,16 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+
+    @PutMapping("/{id}/roles")
+    public ResponseEntity<DelivraResponse<UserDTO>> updateUserRoles(
+            @PathVariable(name = "id") Integer userId,
+            @RequestBody @Valid UpdateUserRolesRequest request
+    ) {
+        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        DelivraResponse<UserDTO> updated = userService.updateUserRoles(userId, request);
+        return ResponseEntity.ok(updated);
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<DelivraResponse<UserDTO>> softDeleteUser(@PathVariable(name = "id") Integer userId) {

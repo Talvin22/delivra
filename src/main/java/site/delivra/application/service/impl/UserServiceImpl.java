@@ -20,6 +20,7 @@ import site.delivra.application.model.entities.Role;
 import site.delivra.application.model.entities.User;
 import site.delivra.application.model.request.user.NewUserRequest;
 import site.delivra.application.model.request.user.UpdateUserRequest;
+import site.delivra.application.model.request.user.UpdateUserRolesRequest;
 import site.delivra.application.model.request.user.UserSearchRequest;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.model.response.PaginationResponse;
@@ -100,6 +101,22 @@ public class UserServiceImpl implements UserService {
        UserDTO dto = userMapper.toDto(user);
 
        return DelivraResponse.createSuccessful(dto);
+    }
+
+    @Override
+    public DelivraResponse<UserDTO> updateUserRoles(Integer userId, UpdateUserRolesRequest request) {
+        User user = userRepository.findByIdAndDeletedFalse(userId)
+                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
+
+        Set<Role> newRoles = new HashSet<>();
+        for (String roleName : request.getRoles()) {
+            Role role = roleRepository.findByName(roleName)
+                    .orElseThrow(() -> new NotFoundException("Role not found: " + roleName));
+            newRoles.add(role);
+        }
+        user.setRoles(newRoles);
+        User saved = userRepository.save(user);
+        return DelivraResponse.createSuccessful(userMapper.toDto(saved));
     }
 
     @Override
