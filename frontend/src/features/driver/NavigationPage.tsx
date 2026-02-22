@@ -54,6 +54,7 @@ interface MapControllerProps {
 function MapController({ center, follow, bearing, onManualMove }: MapControllerProps) {
   const map = useMap()
   const followRef = useRef(follow)
+  const prevFollowRef = useRef(follow)
   followRef.current = follow
 
   useEffect(() => {
@@ -70,7 +71,13 @@ function MapController({ center, follow, bearing, onManualMove }: MapControllerP
 
   useEffect(() => {
     if (!follow) return
-    map.setBearing(bearing)
+    // Don't reset bearing just because follow was re-enabled (user tapped re-center).
+    // Only update bearing when the value actually changes while already following.
+    const justEnabled = !prevFollowRef.current && follow
+    prevFollowRef.current = follow
+    if (!justEnabled) {
+      map.setBearing(bearing)
+    }
   }, [map, bearing, follow])
 
   return null
@@ -107,6 +114,9 @@ export function NavigationPage() {
   const routeFetchedRef = useRef(false)
 
   useWakeLock(!ended)
+
+  // Memoize icon — recreating on every render causes Leaflet to re-render the marker (jerkiness)
+  const driverIcon = useMemo(() => makeDriverIcon(), [])
 
   // ── Load task + active session ───────────────────────────────────
   const { data: task } = useQuery({
@@ -228,7 +238,7 @@ export function NavigationPage() {
   const isPending = stopNav.isPending || completeTask.isPending
 
   return (
-    <div className="relative w-full h-screen bg-bg-base overflow-hidden">
+    <div className="relative w-full bg-bg-base overflow-hidden" style={{ height: '100dvh' }}>
 
       {/* ── Map ───────────────────────────────────────────────────── */}
       <MapContainer
@@ -262,7 +272,7 @@ export function NavigationPage() {
 
         {/* Driver marker */}
         {driverPos && (
-          <Marker position={driverPos} icon={makeDriverIcon()} zIndexOffset={1000} />
+          <Marker position={driverPos} icon={driverIcon} zIndexOffset={1000} />
         )}
 
         {/* Destination marker */}
@@ -271,9 +281,9 @@ export function NavigationPage() {
         )}
       </MapContainer>
 
-      {/* ── Turn instruction bar (top center) ────────────────────── */}
+      {/* ── Turn instruction bar (top, left-aligned, right margin for X button) ── */}
       {instruction && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[500] pointer-events-none max-w-[80vw]">
+        <div className="absolute top-4 left-4 right-14 z-[500] pointer-events-none">
           <div className="flex items-center gap-3 bg-bg-surface/95 border border-bg-border rounded-xl px-4 py-2.5 shadow-xl backdrop-blur-md">
             <span className="text-2xl leading-none flex-shrink-0">
               {ACTION_ICONS[instruction.action] ?? '↑'}

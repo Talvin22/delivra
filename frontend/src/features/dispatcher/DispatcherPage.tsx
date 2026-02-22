@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
-import { Plus, MessageSquare, ChevronRight, RefreshCw } from 'lucide-react'
+import { Plus, MessageSquare, ChevronLeft, RefreshCw } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 import { tasksApi } from '@/api/tasks'
 import { usersApi } from '@/api/users'
@@ -67,27 +67,32 @@ export function DispatcherPage() {
     },
   })
 
+  // Subscribe to both /position (on-route) and /route (off-route reroute) for all IN_PROGRESS tasks
   useEffect(() => {
     if (!tasks) return
     const inProgress = tasks.filter(t => t.status === 'IN_PROGRESS')
-    const unsubs = inProgress.map(task =>
-      subscribe(`/topic/navigation/${task.id}/position`, (data) => {
-        const ev = data as NavigationEventDTO
-        setDriverPositions(prev => {
-          const next = new Map(prev)
-          next.set(task.id, {
-            taskId: task.id,
-            userId: task.userId,
-            username: `#${task.id}`,
-            lat: ev.latitude,
-            lng: ev.longitude,
-            onRoute: ev.onRoute,
-            updatedAt: Date.now(),
-          })
-          return next
+
+    const handlePosition = (taskId: number) => (data: unknown) => {
+      const ev = data as NavigationEventDTO
+      setDriverPositions(prev => {
+        const next = new Map(prev)
+        next.set(taskId, {
+          taskId,
+          userId: 0,
+          username: `#${taskId}`,
+          lat: ev.latitude,
+          lng: ev.longitude,
+          onRoute: ev.onRoute,
+          updatedAt: Date.now(),
         })
-      }),
-    )
+        return next
+      })
+    }
+
+    const unsubs = inProgress.flatMap(task => [
+      subscribe(`/topic/navigation/${task.id}/position`, handlePosition(task.id)),
+      subscribe(`/topic/navigation/${task.id}/route`, handlePosition(task.id)),
+    ])
     return () => unsubs.forEach(u => u())
   }, [tasks, subscribe])
 
@@ -99,7 +104,7 @@ export function DispatcherPage() {
   const STATUSES: (DeliveryTaskStatus | 'ALL')[] = ['ALL', 'IN_PROGRESS', 'PENDING', 'COMPLETED', 'CANCELED']
 
   return (
-    // absolute inset-0: fills the relative main container completely — no flex height issues
+    // absolute inset-0: fills the relative main container completely
     <div className="absolute inset-0">
 
       {/* ── Map layer (always full screen behind panel) ── */}
@@ -140,82 +145,84 @@ export function DispatcherPage() {
             </Marker>
           ))}
         </MapContainer>
-
-        {/* Toggle panel button */}
-        <button
-          onClick={() => setPanelOpen(p => !p)}
-          className="absolute top-4 left-4 z-[500] w-10 h-10 rounded-full bg-bg-surface border border-bg-border shadow-lg flex items-center justify-center text-text-secondary hover:text-brand transition-colors"
-          title={panelOpen ? 'Скрыть панель' : 'Показать панель'}
-        >
-          <ChevronRight size={16} className={cn('transition-transform', panelOpen ? 'rotate-180' : '')} />
-        </button>
       </div>
 
-      {/* ── Right panel (absolute, overlays map on right side) ── */}
+      {/* ── Right panel with tab handle attached to its left edge ── */}
       <div className={cn(
         'absolute top-0 bottom-0 right-0 z-[500]',
-        'flex flex-col bg-bg-surface border-l border-bg-border shadow-2xl',
-        'w-80 transition-transform duration-200',
+        'transition-transform duration-200',
         panelOpen ? 'translate-x-0' : 'translate-x-full',
       )}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-3 border-b border-bg-border flex-shrink-0">
-          <span className="text-sm font-semibold text-text-primary">
-            Задачи <span className="text-text-muted font-normal">({filtered.length})</span>
-          </span>
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon" onClick={() => refetch()}>
-              <RefreshCw size={14} />
-            </Button>
-            <Button size="sm" onClick={() => setTaskFormOpen(true)}>
-              <Plus size={14} /> Создать
-            </Button>
+        {/* Tab handle — sticks out to the left of the panel */}
+        <button
+          onClick={() => setPanelOpen(p => !p)}
+          className="absolute left-0 top-20 -translate-x-full bg-bg-surface border border-r-0 border-bg-border rounded-l-lg px-1.5 py-3 flex items-center text-text-secondary hover:text-brand transition-colors shadow-lg"
+          title={panelOpen ? 'Скрыть панель' : 'Показать панель'}
+        >
+          <ChevronLeft size={14} className={cn('transition-transform', panelOpen ? '' : 'rotate-180')} />
+        </button>
+
+        {/* Panel content */}
+        <div className="w-72 sm:w-80 h-full flex flex-col bg-bg-surface border-l border-bg-border shadow-2xl">
+          {/* Header */}
+          <div className="flex items-center justify-between p-3 border-b border-bg-border flex-shrink-0">
+            <span className="text-sm font-semibold text-text-primary">
+              Задачи <span className="text-text-muted font-normal">({filtered.length})</span>
+            </span>
+            <div className="flex gap-1">
+              <Button variant="ghost" size="icon" onClick={() => refetch()}>
+                <RefreshCw size={14} />
+              </Button>
+              <Button size="sm" onClick={() => setTaskFormOpen(true)}>
+                <Plus size={14} /> Создать
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {/* Filter tabs */}
-        <div className="flex gap-1 p-2 border-b border-bg-border overflow-x-auto flex-shrink-0">
-          {STATUSES.map(s => (
-            <button
-              key={s}
-              onClick={() => setFilterStatus(s)}
-              className={cn(
-                'text-xs px-2.5 py-1 rounded-md whitespace-nowrap transition-colors',
-                filterStatus === s
-                  ? 'bg-brand/10 text-brand font-medium'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-bg-raised',
-              )}
-            >
-              {s === 'ALL' ? 'Все' : TASK_STATUS_LABEL[s]}
-            </button>
-          ))}
-        </div>
+          {/* Filter tabs */}
+          <div className="flex gap-1 p-2 border-b border-bg-border overflow-x-auto flex-shrink-0">
+            {STATUSES.map(s => (
+              <button
+                key={s}
+                onClick={() => setFilterStatus(s)}
+                className={cn(
+                  'text-xs px-2.5 py-1 rounded-md whitespace-nowrap transition-colors',
+                  filterStatus === s
+                    ? 'bg-brand/10 text-brand font-medium'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-bg-raised',
+                )}
+              >
+                {s === 'ALL' ? 'Все' : TASK_STATUS_LABEL[s]}
+              </button>
+            ))}
+          </div>
 
-        {/* Task list */}
-        <div className="flex-1 overflow-y-auto">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-24 text-text-muted text-sm">Загрузка...</div>
-          ) : filtered.length === 0 ? (
-            <div className="flex items-center justify-center h-24 text-text-muted text-sm">Нет задач</div>
-          ) : (
-            filtered.map(task => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                hasDriver={driverPositions.has(task.id)}
-                onChat={() => setChatTaskId(task.id)}
-              />
-            ))
+          {/* Task list */}
+          <div className="flex-1 overflow-y-auto">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-24 text-text-muted text-sm">Загрузка...</div>
+            ) : filtered.length === 0 ? (
+              <div className="flex items-center justify-center h-24 text-text-muted text-sm">Нет задач</div>
+            ) : (
+              filtered.map(task => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  hasDriver={driverPositions.has(task.id)}
+                  onChat={() => setChatTaskId(task.id)}
+                />
+              ))
+            )}
+          </div>
+
+          {driverPositions.size > 0 && (
+            <div className="p-2 border-t border-bg-border flex-shrink-0">
+              <p className="text-xs text-text-muted">
+                🚛 {driverPositions.size} {driverPositions.size === 1 ? 'водитель' : 'водителей'} онлайн
+              </p>
+            </div>
           )}
         </div>
-
-        {driverPositions.size > 0 && (
-          <div className="p-2 border-t border-bg-border flex-shrink-0">
-            <p className="text-xs text-text-muted">
-              🚛 {driverPositions.size} {driverPositions.size === 1 ? 'водитель' : 'водителей'} онлайн
-            </p>
-          </div>
-        )}
       </div>
 
       {taskFormOpen && (
