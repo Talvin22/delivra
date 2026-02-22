@@ -26,7 +26,7 @@ export function DriverTaskListPage() {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['driver-tasks', user?.id],
     queryFn: async () => {
-      const res = await tasksApi.search({ userId: user?.id }, 0, 100)
+      const res = await tasksApi.search({ userId: user?.id, deleted: false }, 0, 100)
       return res.data.payload.content
     },
     refetchInterval: 30_000,

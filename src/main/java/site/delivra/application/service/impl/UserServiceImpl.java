@@ -133,7 +133,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public DelivraResponse<PaginationResponse<UserSearchDTO>> findAllUsers(Pageable pageable) {
-        Page<UserSearchDTO> users = userRepository.findAll(pageable)
+        Page<UserSearchDTO> users = userRepository.findByDeletedFalse(pageable)
                 .map(userMapper::toUserSearchDTO);
 
         PaginationResponse<UserSearchDTO> response = new PaginationResponse<>(

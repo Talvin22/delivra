@@ -14,10 +14,10 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
   return (
     <Dialog.Root open={open} onOpenChange={v => !v && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-in fade-in" />
+        <Dialog.Overlay className="fixed inset-0 z-[600] bg-black/60 backdrop-blur-sm animate-in fade-in" />
         <Dialog.Content
           className={cn(
-            'fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+            'fixed z-[700] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
             'w-full max-w-md bg-bg-surface border border-bg-border rounded-xl shadow-2xl',
             'animate-in fade-in zoom-in-95',
             className,

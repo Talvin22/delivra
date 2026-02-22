@@ -45,6 +45,13 @@ public class DeliveryTaskSearchCriteria implements Specification<DeliveryTask> {
             predicates.add(criteriaBuilder.equal(root.get(DeliveryTask.DELETED_FIELD), request.getDeleted()));
         }
 
+        if (Objects.nonNull(request.getUserId())) {
+            predicates.add(criteriaBuilder.equal(
+                    root.get(DeliveryTask.USER_FIELD).get(User.ID_FIELD),
+                    request.getUserId()
+            ));
+        }
+
         if (Objects.nonNull(request.getKeyword())) {
             Predicate keywordPredicate = criteriaBuilder.or(
                     criteriaBuilder.like(root.get(DeliveryTask.ADDRESS_FIELD), "%" + request.getKeyword() + "%"),
