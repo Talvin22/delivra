@@ -9,6 +9,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    host: true,
     proxy: {
       '/auth':  { target: 'http://localhost:8189', changeOrigin: true },
       '/users': { target: 'http://localhost:8189', changeOrigin: true },

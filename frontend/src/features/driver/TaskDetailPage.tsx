@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { MapPin, Navigation, ArrowLeft, MessageSquare } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { MapPin, Navigation, ArrowLeft, MessageSquare, RotateCcw, XCircle } from 'lucide-react'
 import { tasksApi } from '@/api/tasks'
 import { navigationApi } from '@/api/navigation'
 import { Button } from '@/components/ui/Button'
@@ -19,6 +19,7 @@ export function TaskDetailPage() {
   const { id } = useParams<{ id: string }>()
   const taskId = Number(id)
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [chatOpen, setChatOpen] = useState(false)
 
   const { data: task, isLoading } = useQuery({
@@ -44,10 +45,20 @@ export function TaskDetailPage() {
     },
   })
 
+  const changeStatus = useMutation({
+    mutationFn: (status: DeliveryTaskStatus) =>
+      tasksApi.update(taskId, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] })
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    },
+  })
+
   if (isLoading || !task) return <FullScreenLoader />
 
   const canStart = task.status === 'PENDING' || task.status === 'IN_PROGRESS'
   const isActive = task.status === 'IN_PROGRESS'
+  const anyPending = startNav.isPending || changeStatus.isPending
 
   return (
     <div className="flex flex-col h-full">
@@ -64,7 +75,7 @@ export function TaskDetailPage() {
             </Badge>
           </div>
         </div>
-        <button onClick={() => setChatOpen(true)} className="text-text-secondary hover:text-brand p-2 rounded-lg hover:bg-brand/10 transition-colors relative">
+        <button onClick={() => setChatOpen(true)} className="text-text-secondary hover:text-brand p-2 rounded-lg hover:bg-brand/10 transition-colors">
           <MessageSquare size={20} />
         </button>
       </div>
@@ -96,13 +107,14 @@ export function TaskDetailPage() {
           {task.endTime && <InfoRow label="Завершено" value={formatDateTime(task.endTime)} />}
         </div>
 
-        {/* Action */}
+        {/* Navigation button */}
         {canStart && (
           <Button
             size="lg"
-            className="w-full"
+            className="w-full mb-3"
             onClick={() => startNav.mutate()}
             loading={startNav.isPending}
+            disabled={anyPending}
           >
             <Navigation size={18} />
             {isActive ? 'Продолжить навигацию' : 'Начать навигацию'}
@@ -110,10 +122,10 @@ export function TaskDetailPage() {
         )}
 
         {startNav.isError && (
-          <p className="text-sm text-danger mt-3 text-center">
+          <p className="text-sm text-danger mb-3 text-center">
             {(() => {
               const err = startNav.error as { response?: { status?: number; data?: { message?: string } }; message?: string }
-              if (err?.response?.status === 409) return null // handled in onError via navigate
+              if (err?.response?.status === 409) return null
               if (err?.response?.status === 401) return 'Сессия истекла — войдите снова'
               if (err?.response?.status === 403) return 'Нет доступа к этой задаче'
               if (err?.response?.status === 404) return 'Задача не найдена'
@@ -121,6 +133,65 @@ export function TaskDetailPage() {
             })()}
           </p>
         )}
+
+        {/* Status management */}
+        <div className="bg-bg-surface border border-bg-border rounded-lg p-4">
+          <p className="text-xs text-text-muted mb-3">Управление статусом</p>
+          <div className="flex flex-col gap-2">
+
+            {/* Revert accidental completion */}
+            {task.status === 'COMPLETED' && (
+              <Button
+                variant="outline"
+                size="md"
+                className="w-full"
+                onClick={() => changeStatus.mutate('IN_PROGRESS')}
+                loading={changeStatus.isPending}
+                disabled={anyPending}
+              >
+                <RotateCcw size={15} />
+                Вернуть в работу
+              </Button>
+            )}
+
+            {/* Restore canceled task */}
+            {task.status === 'CANCELED' && (
+              <Button
+                variant="outline"
+                size="md"
+                className="w-full"
+                onClick={() => changeStatus.mutate('PENDING')}
+                loading={changeStatus.isPending}
+                disabled={anyPending}
+              >
+                <RotateCcw size={15} />
+                Восстановить задачу
+              </Button>
+            )}
+
+            {/* Cancel active/pending task */}
+            {(task.status === 'PENDING' || task.status === 'IN_PROGRESS') && (
+              <Button
+                variant="danger"
+                size="md"
+                className="w-full"
+                onClick={() => changeStatus.mutate('CANCELED')}
+                loading={changeStatus.isPending}
+                disabled={anyPending}
+              >
+                <XCircle size={15} />
+                Отменить задачу
+              </Button>
+            )}
+
+          </div>
+
+          {changeStatus.isError && (
+            <p className="text-xs text-danger mt-2 text-center">
+              Не удалось изменить статус
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Chat drawer */}
