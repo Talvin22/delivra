@@ -56,7 +56,7 @@ export function DispatcherPage() {
       const res = await tasksApi.getAll(0, 100)
       return res.data.payload.content
     },
-    refetchInterval: 30_000,
+    refetchInterval: 10_000,
   })
 
   const { data: drivers } = useQuery({
@@ -67,13 +67,15 @@ export function DispatcherPage() {
     },
   })
 
-  // Subscribe to both /position (on-route) and /route (off-route reroute) for all IN_PROGRESS tasks
+  // Subscribe to position/route topics for all non-finished tasks (PENDING + IN_PROGRESS).
+  // We include PENDING so we're already subscribed when navigation starts — no 30s poll lag.
   useEffect(() => {
     if (!tasks) return
-    const inProgress = tasks.filter(t => t.status === 'IN_PROGRESS')
+    const active = tasks.filter(t => t.status === 'IN_PROGRESS' || t.status === 'PENDING')
 
     const handlePosition = (taskId: number) => (data: unknown) => {
       const ev = data as NavigationEventDTO
+      if (ev.latitude == null || ev.longitude == null) return
       setDriverPositions(prev => {
         const next = new Map(prev)
         next.set(taskId, {
@@ -89,7 +91,7 @@ export function DispatcherPage() {
       })
     }
 
-    const unsubs = inProgress.flatMap(task => [
+    const unsubs = active.flatMap(task => [
       subscribe(`/topic/navigation/${task.id}/position`, handlePosition(task.id)),
       subscribe(`/topic/navigation/${task.id}/route`, handlePosition(task.id)),
     ])
@@ -134,7 +136,7 @@ export function DispatcherPage() {
             </Marker>
           ))}
 
-          {(tasks ?? []).filter(t => t.latitude && t.longitude && t.status !== 'COMPLETED').map(t => (
+          {(tasks ?? []).filter(t => t.latitude && t.longitude && t.status !== 'COMPLETED' && t.status !== 'CANCELED').map(t => (
             <Marker key={`dest-${t.id}`} position={[t.latitude!, t.longitude!]} icon={makeDestIcon()}>
               <Popup>
                 <div className="text-xs">
