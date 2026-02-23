@@ -44,6 +44,17 @@ function makeDestIcon() {
 }
 
 // ─── Map controller (follow mode + rotation) ──────────────────────
+// Design decisions:
+// • blockBearingRef — set SYNCHRONOUSLY in rotatestart (before React re-render)
+//   to prevent the race condition where GPS fires setBearing before follow=false lands.
+// • Distance threshold for panTo — GPS noise (< 5 m) causes constant micro-pan
+//   animations that overlap and produce jitter/flickering.
+// • Bearing threshold — skip setBearing for < 3° changes (GPS heading noise).
+// • justEnabled — when re-center is pressed, always snap to driver's heading (3rd-person view).
+
+const BEARING_THRESHOLD = 3   // degrees — ignore smaller changes
+const PAN_THRESHOLD_M    = 5   // metres  — ignore GPS noise jitter
+
 interface MapControllerProps {
   center: [number, number] | null
   follow: boolean
@@ -53,31 +64,81 @@ interface MapControllerProps {
 
 function MapController({ center, follow, bearing, onManualMove }: MapControllerProps) {
   const map = useMap()
-  const followRef = useRef(follow)
-  const prevFollowRef = useRef(follow)
+  const followRef        = useRef(follow)
+  const onMoveRef        = useRef(onManualMove)
+  const blockBearingRef  = useRef(false)   // true = manual rotation in flight → block setBearing
+  const lastBearingRef   = useRef<number | null>(null)
+  const prevFollowPanRef = useRef(follow)
+  const prevFollowBrgRef = useRef(follow)
+  const lastCenterRef    = useRef<[number, number] | null>(null)
+
   followRef.current = follow
+  onMoveRef.current = onManualMove
 
+  // ── Gesture listeners (stable, no deps on callbacks) ──────────────
   useEffect(() => {
-    const h = () => { if (followRef.current) onManualMove() }
-    map.on('dragstart', h)
-    map.on('rotatestart', h)
-    return () => { map.off('dragstart', h); map.off('rotatestart', h) }
-  }, [map, onManualMove])
+    const onRotateStart = () => {
+      // Block SYNCHRONOUSLY — prevents GPS from overriding user rotation
+      // before React processes setFollowMode(false)
+      blockBearingRef.current = true
+      if (followRef.current) onMoveRef.current()
+    }
+    const onDragStart = () => {
+      if (followRef.current) onMoveRef.current()
+    }
+    map.on('dragstart',   onDragStart)
+    map.on('rotatestart', onRotateStart)
+    return () => { map.off('dragstart', onDragStart); map.off('rotatestart', onRotateStart) }
+  }, [map])  // stable — no changing deps
 
+  // ── Pan to driver (distance-gated to suppress GPS noise) ──────────
   useEffect(() => {
-    if (!follow || !center) return
-    map.panTo(center, { animate: true, duration: 0.3, easeLinearity: 1 })
+    if (!follow || !center) {
+      prevFollowPanRef.current = follow
+      return
+    }
+    const justEnabled = !prevFollowPanRef.current && follow
+    prevFollowPanRef.current = follow
+
+    if (!justEnabled && lastCenterRef.current) {
+      const [lat, lng] = center
+      const [pLat, pLng] = lastCenterRef.current
+      const dLat = (lat - pLat) * 111_320
+      const dLng = (lng - pLng) * 111_320 * Math.cos(lat * Math.PI / 180)
+      if (Math.sqrt(dLat * dLat + dLng * dLng) < PAN_THRESHOLD_M) return
+    }
+
+    lastCenterRef.current = center
+    map.panTo(center, { animate: true, duration: 0.4, easeLinearity: 0.8 })
   }, [map, center, follow])
 
+  // ── Set bearing when following ─────────────────────────────────────
   useEffect(() => {
-    if (!follow) return
-    // Don't reset bearing just because follow was re-enabled (user tapped re-center).
-    // Only update bearing when the value actually changes while already following.
-    const justEnabled = !prevFollowRef.current && follow
-    prevFollowRef.current = follow
-    if (!justEnabled) {
-      map.setBearing(bearing)
+    if (!follow) {
+      prevFollowBrgRef.current = false
+      return
     }
+    const justEnabled = !prevFollowBrgRef.current && follow
+    prevFollowBrgRef.current = follow
+
+    if (justEnabled) {
+      // Re-center button pressed → unblock and restore 3rd-person view
+      blockBearingRef.current = false
+      lastBearingRef.current  = bearing
+      map.setBearing(bearing)
+      return
+    }
+
+    if (blockBearingRef.current) return  // user is rotating manually
+
+    // Threshold — don't jitter on GPS heading noise
+    if (lastBearingRef.current !== null) {
+      const diff = Math.abs(bearing - lastBearingRef.current)
+      if (Math.min(diff, 360 - diff) < BEARING_THRESHOLD) return
+    }
+
+    lastBearingRef.current = bearing
+    map.setBearing(bearing)
   }, [map, bearing, follow])
 
   return null

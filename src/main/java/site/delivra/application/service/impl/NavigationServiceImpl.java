@@ -159,7 +159,6 @@ public class NavigationServiceImpl implements NavigationService {
         double distanceFromRoute = GeoUtils.minDistanceToPolyline(lat, lng, waypoints);
         boolean onRoute = distanceFromRoute < offRouteThresholdMeters;
 
-        Integer taskId = session.getDeliveryTask().getId();
 
         if (onRoute) {
             log.debug("Driver on route: sessionId={}, dist={}m", sessionId, distanceFromRoute);
