@@ -11,7 +11,7 @@ import { tasksApi } from '@/api/tasks'
 import { useWsStore } from '@/store/wsStore'
 import { useGps } from '@/hooks/useGps'
 import { useWakeLock } from '@/hooks/useWakeLock'
-import { calcRemainingDist, closestWaypointIdx, smoothHeading } from '@/lib/geo'
+import { calcRemainingDist, closestWaypointIdx } from '@/lib/geo'
 import { formatDistance, formatDuration } from '@/lib/formatters'
 import { ChatPanel } from '@/components/chat/ChatPanel'
 import { Button } from '@/components/ui/Button'
@@ -109,7 +109,13 @@ function MapController({ center, follow, bearing, onManualMove }: MapControllerP
     }
 
     lastCenterRef.current = center
-    map.panTo(center, { animate: true, duration: 0.4, easeLinearity: 0.8 })
+    // Re-center button: animate back to driver. Continuous follow: no animation
+    // (avoids overlapping pan animations from rapid GPS updates causing flicker).
+    if (justEnabled) {
+      map.panTo(center, { animate: true, duration: 0.4, easeLinearity: 0.8 })
+    } else {
+      map.setView(center, map.getZoom(), { animate: false })
+    }
   }, [map, center, follow])
 
   // ── Set bearing when following ─────────────────────────────────────
@@ -172,7 +178,9 @@ export function NavigationPage() {
   const [instrIdx, setInstrIdx] = useState(0)
   const [chatOpen, setChatOpen] = useState(false)
   const [ended, setEnded] = useState(false)
-  const routeFetchedRef = useRef(false)
+  const routeFetchedRef  = useRef(false)
+  // Last position that was committed to React state — used to filter GPS noise
+  const lastCommittedPos = useRef<[number, number] | null>(null)
 
   useWakeLock(!ended)
 
@@ -246,12 +254,28 @@ export function NavigationPage() {
   }, [route])
 
   // ── GPS ──────────────────────────────────────────────────────────
-  const handleGpsPosition = useCallback((lat: number, lng: number, h: number) => {
-    const smoothed = smoothHeading(headingRef.current, h)
-    headingRef.current = smoothed
-    setHeading(smoothed)
-    setDriverPos([lat, lng])
-    updateProgress(lat, lng)
+  const handleGpsPosition = useCallback((lat: number, lng: number, h: number, accuracy: number) => {
+    // h is already smoothed by useGps — no double-smoothing here
+    headingRef.current = h
+    setHeading(h)
+
+    // Adaptive threshold: when GPS is still stabilising (high accuracy = large error radius),
+    // require the device to move more before updating the marker.
+    // clamp between 8 m (normal) and 60 m (very poor signal).
+    const threshold = Math.min(60, Math.max(8, accuracy * 0.6))
+
+    const prev = lastCommittedPos.current
+    const movedEnough = !prev || (() => {
+      const dLat = (lat - prev[0]) * 111_320
+      const dLng = (lng - prev[1]) * 111_320 * Math.cos(lat * Math.PI / 180)
+      return Math.sqrt(dLat * dLat + dLng * dLng) >= threshold
+    })()
+
+    if (movedEnough) {
+      lastCommittedPos.current = [lat, lng]
+      setDriverPos([lat, lng])
+      updateProgress(lat, lng)
+    }
 
     if (sessionId && connected) {
       publish(`/app/navigation/${sessionId}/position`, { latitude: lat, longitude: lng })
