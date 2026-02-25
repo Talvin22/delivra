@@ -4,14 +4,25 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import site.delivra.application.model.entities.DeliveryTask;
+import site.delivra.application.model.enums.DeliveryTaskStatus;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface DeliveryTaskRepository extends JpaRepository<DeliveryTask, Integer>, JpaSpecificationExecutor<DeliveryTask> {
 
     Optional<DeliveryTask> findByIdAndDeletedFalse(Integer id);
+
     Page<DeliveryTask> findAllByDeletedFalse(Pageable pageable);
+
+    @Query("SELECT t.status, COUNT(t) FROM DeliveryTask t WHERE t.user.id = :driverId AND t.deleted = false GROUP BY t.status")
+    List<Object[]> countTasksByStatusForDriver(@Param("driverId") Integer driverId);
+
+    @Query("SELECT COUNT(t) FROM DeliveryTask t WHERE t.user.id = :driverId AND t.status = :status AND t.deleted = false")
+    long countPendingTasksForDriver(@Param("driverId") Integer driverId, @Param("status") DeliveryTaskStatus status);
 }
