@@ -2,18 +2,12 @@ package site.delivra.application.utils;
 
 import java.util.List;
 
-/**
- * Geographic utility methods for navigation calculations.
- */
 public final class GeoUtils {
 
     private static final double EARTH_RADIUS_METERS = 6_371_000.0;
 
     private GeoUtils() {}
 
-    /**
-     * Haversine formula: great-circle distance between two coordinates in meters.
-     */
     public static double distanceMeters(double lat1, double lng1, double lat2, double lng2) {
         double dLat = Math.toRadians(lat2 - lat1);
         double dLng = Math.toRadians(lng2 - lng1);
@@ -25,10 +19,6 @@ public final class GeoUtils {
         return EARTH_RADIUS_METERS * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    /**
-     * Minimum distance in meters from a point to a polyline (sequence of waypoints).
-     * Checks distance to each segment (closest point on segment), not just vertices.
-     */
     public static double minDistanceToPolyline(double lat, double lng,
                                                List<FlexiblePolylineDecoder.Waypoint> polyline) {
         if (polyline == null || polyline.isEmpty()) {
@@ -50,10 +40,6 @@ public final class GeoUtils {
         return minDist;
     }
 
-    /**
-     * Distance in meters from point P to segment AB.
-     * Projects P onto AB; if projection falls outside the segment, uses the nearest endpoint.
-     */
     private static double distanceToSegment(double pLat, double pLng,
                                             double aLat, double aLng,
                                             double bLat, double bLng) {

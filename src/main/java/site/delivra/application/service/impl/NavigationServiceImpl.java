@@ -71,7 +71,6 @@ public class NavigationServiceImpl implements NavigationService {
             log.warn("Route calculation failed for task {}, starting session without route: {}", taskId, e.getMessage());
         }
 
-        // Mark task as IN_PROGRESS when navigation starts
         task.setStatus(DeliveryTaskStatus.IN_PROGRESS);
         taskRepository.save(task);
 
