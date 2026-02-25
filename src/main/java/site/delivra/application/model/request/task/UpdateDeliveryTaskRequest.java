@@ -17,4 +17,6 @@ public class UpdateDeliveryTaskRequest {
     private Double longitude;
 
     private DeliveryTaskStatus status;
+
+    private Integer driverId;
 }

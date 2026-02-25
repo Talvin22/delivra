@@ -84,6 +84,18 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage(deliveryTaskId)));
 
         taskMapper.updateDeliveryTask(updateDeliveryTaskRequest, deliveryTask);
+
+        if (updateDeliveryTaskRequest.getDriverId() != null) {
+            User driver = userRepository.findByIdAndDeletedFalse(updateDeliveryTaskRequest.getDriverId())
+                    .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(updateDeliveryTaskRequest.getDriverId())));
+            boolean isDriver = driver.getRoles().stream()
+                    .anyMatch(role -> role.getUserSystemRole() == DelivraServiceUserRole.DRIVER);
+            if (!isDriver) {
+                throw new NotDriverException(ApiErrorMessage.USER_NOT_DRIVER.getMessage(driver.getId()));
+            }
+            deliveryTask.setUser(driver);
+        }
+
         DeliveryTask updated = deliveryTaskRepository.save(deliveryTask);
         return DelivraResponse.createSuccessful(taskMapper.toDto(updated));
 
