@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import site.delivra.application.model.constants.ApiLogMassage;
+import site.delivra.application.model.constants.ApiLogMessage;
 import site.delivra.application.model.dto.user.UserProfileDTO;
 import site.delivra.application.model.request.user.LoginRequest;
 import site.delivra.application.model.request.user.RegistrationUserRequest;
@@ -28,7 +28,7 @@ public class AuthController {
             @RequestBody @Valid LoginRequest loginRequest,
             HttpServletResponse response
     ) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         DelivraResponse<UserProfileDTO> result = authService.login(loginRequest);
         Cookie authorizationCookie = ApiUtils.createAuthCookie(result.getPayload().getToken());
@@ -43,7 +43,7 @@ public class AuthController {
     public ResponseEntity<DelivraResponse<UserProfileDTO>> refreshToken(
             @RequestParam(name = "token") String refreshToken,
             HttpServletResponse response) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         DelivraResponse<UserProfileDTO> userProfileDTOIamResponse = authService.refreshAccessToken(refreshToken);
         Cookie authorizationCookie = ApiUtils.createAuthCookie(userProfileDTOIamResponse.getPayload().getToken());
@@ -58,7 +58,7 @@ public class AuthController {
             @RequestBody @Valid RegistrationUserRequest registrationUserRequest,
             HttpServletResponse response) {
 
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
         DelivraResponse<UserProfileDTO> result= authService.register(registrationUserRequest);
         Cookie authorizationCookie = ApiUtils.createAuthCookie(result.getPayload().getToken());
         response.addCookie(authorizationCookie);

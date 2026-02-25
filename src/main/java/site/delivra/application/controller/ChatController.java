@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
-import site.delivra.application.model.constants.ApiLogMassage;
+import site.delivra.application.model.constants.ApiLogMessage;
 import site.delivra.application.model.dto.chat.ChatMessageDTO;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.model.response.PaginationResponse;
@@ -29,7 +29,7 @@ public class ChatController {
             @PathVariable Integer taskId,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "limit", defaultValue = "20") int limit) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         Pageable pageable = PageRequest.of(page, limit);
         DelivraResponse<PaginationResponse<ChatMessageDTO>> response =
@@ -39,7 +39,7 @@ public class ChatController {
 
     @PatchMapping("/read")
     public ResponseEntity<Void> markAsRead(@PathVariable Integer taskId, Principal principal) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         Integer userId = extractUserId(principal);
         chatService.markAsRead(taskId, userId);

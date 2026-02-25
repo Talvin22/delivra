@@ -6,11 +6,9 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public enum ApiMassage {
-    TOKEN_CREATED_OR_UPDATED("User's token has been created or updated! "),
+public enum ApiMessage {
+    TOKEN_CREATED_OR_UPDATED("User's token has been created or updated!"),
     ;
 
-    private final String  message;
-
-
+    private final String message;
 }

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import site.delivra.application.model.constants.ApiLogMassage;
+import site.delivra.application.model.constants.ApiLogMessage;
 import site.delivra.application.model.dto.navigation.NavigationSessionDTO;
 import site.delivra.application.model.request.navigation.StartNavigationRequest;
 import site.delivra.application.model.response.DelivraResponse;
@@ -24,7 +24,7 @@ public class NavigationController {
     public ResponseEntity<DelivraResponse<NavigationSessionDTO>> startNavigation(
             @PathVariable Integer taskId,
             @RequestBody @Valid StartNavigationRequest request) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         DelivraResponse<NavigationSessionDTO> response = navigationService.startNavigation(taskId, request);
         return ResponseEntity.ok(response);
@@ -32,7 +32,7 @@ public class NavigationController {
 
     @PostMapping("/end")
     public ResponseEntity<DelivraResponse<NavigationSessionDTO>> endNavigation(@PathVariable Integer taskId) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         DelivraResponse<NavigationSessionDTO> response = navigationService.endNavigation(taskId);
         return ResponseEntity.ok(response);
@@ -40,7 +40,7 @@ public class NavigationController {
 
     @GetMapping("/active")
     public ResponseEntity<DelivraResponse<NavigationSessionDTO>> getActiveSession(@PathVariable Integer taskId) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         DelivraResponse<NavigationSessionDTO> response = navigationService.getActiveSession(taskId);
         return ResponseEntity.ok(response);

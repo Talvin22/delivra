@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import site.delivra.application.model.constants.ApiLogMassage;
+import site.delivra.application.model.constants.ApiLogMessage;
 import site.delivra.application.model.dto.user.UserDTO;
 import site.delivra.application.model.dto.user.UserSearchDTO;
 import site.delivra.application.model.request.user.NewUserRequest;
@@ -30,7 +30,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<DelivraResponse<UserDTO>> getUserById(@Valid @PathVariable(name = "id") Integer userId) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         DelivraResponse<UserDTO> byId = userService.getById(userId);
         return ResponseEntity.ok(byId);
@@ -38,7 +38,7 @@ public class UserController {
 
     @PostMapping("/create")
     public ResponseEntity<DelivraResponse<UserDTO>> createUser(@RequestBody @Valid NewUserRequest newUserRequest) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
         DelivraResponse<UserDTO> byId = userService.createUser(newUserRequest);
         return ResponseEntity.ok(byId);
 
@@ -50,7 +50,7 @@ public class UserController {
             @PathVariable(name = "id") Integer userId,
             @RequestBody @Valid UpdateUserRequest updateUserRequest
     ) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         DelivraResponse<UserDTO> updatedUser = userService.updateUserById(userId, updateUserRequest);
         return ResponseEntity.ok(updatedUser);
@@ -62,14 +62,14 @@ public class UserController {
             @PathVariable(name = "id") Integer userId,
             @RequestBody @Valid UpdateUserRolesRequest request
     ) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
         DelivraResponse<UserDTO> updated = userService.updateUserRoles(userId, request);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<DelivraResponse<UserDTO>> softDeleteUser(@PathVariable(name = "id") Integer userId) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         userService.softDeleteUser(userId);
         return ResponseEntity.ok().build();
@@ -81,7 +81,7 @@ public class UserController {
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "limit", defaultValue = "10") int limit
     ) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         Pageable pageable = PageRequest.of(page, limit);
         DelivraResponse<PaginationResponse<UserSearchDTO>> response = userService.findAllUsers(pageable);
@@ -96,7 +96,7 @@ public class UserController {
             @RequestParam(name = "limit", defaultValue = "10") int limit
 
     ) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         Pageable pageable = PageRequest.of(page, limit);
         DelivraResponse<PaginationResponse<UserSearchDTO>> response = userService.searchUsers(request, pageable);

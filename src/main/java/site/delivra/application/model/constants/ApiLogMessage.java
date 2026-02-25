@@ -6,10 +6,9 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public enum ApiLogMassage {
-    POST_INFO_BY_ID("Receiving post with id: {}"),
+public enum ApiLogMessage {
     NAME_OF_CURRENT_METHOD("Current method: {}"),
     ;
-    private final String value;
 
+    private final String value;
 }

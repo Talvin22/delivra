@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import site.delivra.application.model.constants.ApiMassage;
+import site.delivra.application.model.constants.ApiMessage;
 
 import java.io.Serializable;
 
@@ -24,6 +24,6 @@ public class DelivraResponse<P extends Serializable> implements Serializable {
     }
 
     public static <P extends Serializable> DelivraResponse<P> createSuccessfulWithNewToken(P payload) {
-        return new DelivraResponse<>(ApiMassage.TOKEN_CREATED_OR_UPDATED.getMessage(), payload, true);
+        return new DelivraResponse<>(ApiMessage.TOKEN_CREATED_OR_UPDATED.getMessage(), payload, true);
     }
 }

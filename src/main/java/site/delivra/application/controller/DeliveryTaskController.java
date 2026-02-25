@@ -6,7 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import site.delivra.application.model.constants.ApiLogMassage;
+import site.delivra.application.model.constants.ApiLogMessage;
 import site.delivra.application.model.dto.DeliveryTaskDTO;
 import jakarta.validation.Valid;
 import site.delivra.application.model.dto.RouteDTO;
@@ -29,7 +29,7 @@ public class DeliveryTaskController {
 
     @GetMapping("/{id}")
     public ResponseEntity<DelivraResponse<DeliveryTaskDTO>> getById(@PathVariable(name = "id") Integer id) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         DelivraResponse<DeliveryTaskDTO> byId = deliveryTaskService.getById(id);
 
@@ -39,7 +39,7 @@ public class DeliveryTaskController {
     @PostMapping("/create")
     public ResponseEntity<DelivraResponse<DeliveryTaskDTO>> createTask(@RequestBody NewDeliveryTaskRequest deliveryTaskRequest) {
 
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         DelivraResponse<DeliveryTaskDTO> deliveryTask = deliveryTaskService.createDeliveryTask(deliveryTaskRequest);
 
@@ -50,7 +50,7 @@ public class DeliveryTaskController {
     public ResponseEntity<DelivraResponse<DeliveryTaskDTO>> updateTask
             (@PathVariable(name = "id") Integer id,
              @RequestBody UpdateDeliveryTaskRequest deliveryTaskRequest) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         DelivraResponse<DeliveryTaskDTO> deliveryTask = deliveryTaskService.updateDeliveryTaskById(id, deliveryTaskRequest);
         return ResponseEntity.ok(deliveryTask);
@@ -58,7 +58,7 @@ public class DeliveryTaskController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<DelivraResponse<DeliveryTaskDTO>> deleteTask(@PathVariable(name = "id") Integer id) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         deliveryTaskService.softDeleteUserDeliveryTask(id);
         return ResponseEntity.ok().build();
@@ -69,7 +69,7 @@ public class DeliveryTaskController {
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "limit", defaultValue = "10") int limit) {
 
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
         Pageable pageable = PageRequest.of(page, limit);
         DelivraResponse<PaginationResponse<DeliveryTaskDTO>> allDeliveryTasks = deliveryTaskService.findAllDeliveryTasks(pageable);
         return ResponseEntity.ok(allDeliveryTasks);
@@ -82,7 +82,7 @@ public class DeliveryTaskController {
             @RequestParam(name = "limit", defaultValue = "10") int limit,
             @RequestBody SearchDeliveryTaskRequest searchDeliveryTaskRequest) {
 
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
         Pageable pageable = PageRequest.of(page, limit);
         DelivraResponse<PaginationResponse<DeliveryTaskDTO>> allDeliveryTasks = deliveryTaskService.searchDeliveryTasks(searchDeliveryTaskRequest, pageable);
         return ResponseEntity.ok(allDeliveryTasks);
@@ -93,7 +93,7 @@ public class DeliveryTaskController {
     public ResponseEntity<DelivraResponse<RouteDTO>> getRoute(
             @PathVariable(name = "id") Integer id,
             @RequestBody @Valid RouteRequest routeRequest) {
-        log.trace(ApiLogMassage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
+        log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
         routeRequest.setTaskId(id);
         DelivraResponse<RouteDTO> route = deliveryTaskService.getRouteForTask(routeRequest);
