@@ -42,8 +42,10 @@ public class NavigationServiceImpl implements NavigationService {
     @Value("${navigation.off-route-threshold-meters:200}")
     private double offRouteThresholdMeters;
 
+    @Value("${navigation.reroute-cooldown-seconds:30}")
+    private long rerouteCooldownSeconds;
+
     private final Map<Integer, Long> lastRerouteBySession = new ConcurrentHashMap<>();
-    private static final long REROUTE_COOLDOWN_MS = 30_000L;
 
     @Override
     @Transactional
@@ -172,7 +174,7 @@ public class NavigationServiceImpl implements NavigationService {
 
         long now = System.currentTimeMillis();
         Long lastReroute = lastRerouteBySession.get(sessionId);
-        if (lastReroute != null && now - lastReroute < REROUTE_COOLDOWN_MS) {
+        if (lastReroute != null && now - lastReroute < rerouteCooldownSeconds * 1000L) {
             log.debug("Reroute cooldown active for session {}, skipping", sessionId);
             return NavigationEventDTO.builder()
                     .type(NavigationEventDTO.Type.POSITION)
