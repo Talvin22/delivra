@@ -2,10 +2,12 @@ package site.delivra.application.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import site.delivra.application.config.CacheConfig;
 import site.delivra.application.config.HereApiConfig;
 import site.delivra.application.exception.HereApiException;
 import site.delivra.application.model.constants.ApiErrorMessage;
@@ -29,6 +31,7 @@ public class HereApiServiceImpl implements HereApiService {
     private final HereApiConfig hereApiConfig;
 
     @Override
+    @Cacheable(value = CacheConfig.CACHE_GEOCODING, key = "#address.trim().toLowerCase()")
     public GeocodingResult geocodeAddress(String address) {
         URI uri = UriComponentsBuilder
                 .fromHttpUrl(hereApiConfig.getGeocodingBaseUrl())
@@ -60,6 +63,8 @@ public class HereApiServiceImpl implements HereApiService {
     }
 
     @Override
+    @Cacheable(value = CacheConfig.CACHE_ROUTES,
+            key = "T(String).format('%.4f,%.4f->%.4f,%.4f|%s,%s,%s,%s', #originLat, #originLng, #destLat, #destLng, #grossWeight, #height, #width, #length)")
     public RouteDTO calculateTruckRoute(
             Double originLat, Double originLng,
             Double destLat, Double destLng,
