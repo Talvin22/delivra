@@ -1,5 +1,5 @@
 import { api } from './axios'
-import type { DelivraResponse, PaginationResponse, DeliveryTaskDTO, RouteDTO } from '@/types/api'
+import type { DelivraResponse, PaginationResponse, DeliveryTaskDTO, RouteDTO, DriverRecommendationDTO } from '@/types/api'
 
 export const tasksApi = {
   getAll: (page = 0, limit = 20) =>
@@ -14,7 +14,7 @@ export const tasksApi = {
   create: (body: { driverId?: number; address: string; latitude?: number; longitude?: number }) =>
     api.post<DelivraResponse<DeliveryTaskDTO>>('/tasks/create', body),
 
-  update: (id: number, body: { address?: string; latitude?: number; longitude?: number; status?: string }) =>
+  update: (id: number, body: { address?: string; latitude?: number; longitude?: number; status?: string; driverId?: number }) =>
     api.put<DelivraResponse<DeliveryTaskDTO>>(`/tasks/update/${id}`, body),
 
   delete: (id: number) =>
@@ -22,4 +22,7 @@ export const tasksApi = {
 
   getRoute: (id: number, body: { originLatitude: number; originLongitude: number }) =>
     api.post<DelivraResponse<RouteDTO>>(`/tasks/${id}/route`, body),
+
+  getRecommendations: (taskId: number, limit = 5) =>
+    api.get<DelivraResponse<DriverRecommendationDTO[]>>(`/tasks/${taskId}/drivers/recommend`, { params: { limit } }),
 }

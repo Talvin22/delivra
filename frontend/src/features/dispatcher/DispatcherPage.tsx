@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
-import { Plus, MessageSquare, ChevronLeft, RefreshCw } from 'lucide-react'
+import { Plus, MessageSquare, ChevronLeft, RefreshCw, UserPlus } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 import { tasksApi } from '@/api/tasks'
 import { usersApi } from '@/api/users'
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { ChatPanel } from '@/components/chat/ChatPanel'
 import { TaskFormModal } from './TaskFormModal'
+import { DriverRecommendationModal } from './DriverRecommendationModal'
 import { formatDateTime, TASK_STATUS_LABEL } from '@/lib/formatters'
 import type { DeliveryTaskDTO, DeliveryTaskStatus, NavigationEventDTO, DriverPosition } from '@/types/api'
 import { cn } from '@/lib/utils'
@@ -47,6 +48,7 @@ export function DispatcherPage() {
   const [driverPositions, setDriverPositions] = useState<Map<number, DriverPosition>>(new Map())
   const [chatTaskId, setChatTaskId] = useState<number | null>(null)
   const [taskFormOpen, setTaskFormOpen] = useState(false)
+  const [recommendTaskId, setRecommendTaskId] = useState<number | null>(null)
   const [filterStatus, setFilterStatus] = useState<DeliveryTaskStatus | 'ALL'>('ALL')
   const [panelOpen, setPanelOpen] = useState(true)
 
@@ -212,6 +214,7 @@ export function DispatcherPage() {
                   task={task}
                   hasDriver={driverPositions.has(task.id)}
                   onChat={() => setChatTaskId(task.id)}
+                  onRecommend={() => setRecommendTaskId(task.id)}
                 />
               ))
             )}
@@ -238,16 +241,24 @@ export function DispatcherPage() {
       {chatTaskId !== null && (
         <ChatPanel taskId={chatTaskId} onClose={() => setChatTaskId(null)} overlay />
       )}
+      {recommendTaskId !== null && (
+        <DriverRecommendationModal
+          taskId={recommendTaskId}
+          onClose={() => setRecommendTaskId(null)}
+          onSuccess={handleTaskUpdate}
+        />
+      )}
     </div>
   )
 }
 
 function TaskRow({
-  task, hasDriver, onChat,
+  task, hasDriver, onChat, onRecommend,
 }: {
   task: DeliveryTaskDTO
   hasDriver: boolean
   onChat: () => void
+  onRecommend: () => void
 }) {
   return (
     <div className="border-b border-bg-border hover:bg-bg-raised transition-colors">
@@ -261,12 +272,23 @@ function TaskRow({
           <p className="text-xs text-text-primary truncate">{task.address}</p>
           <p className="text-[10px] text-text-muted mt-0.5">{formatDateTime(task.created)}</p>
         </div>
-        <button
-          onClick={onChat}
-          className="p-1.5 rounded text-text-muted hover:text-brand hover:bg-brand/10 transition-colors flex-shrink-0"
-        >
-          <MessageSquare size={14} />
-        </button>
+        <div className="flex gap-0.5 flex-shrink-0">
+          {task.status === 'PENDING' && (
+            <button
+              onClick={onRecommend}
+              title="Назначить водителя"
+              className="p-1.5 rounded text-text-muted hover:text-success hover:bg-success/10 transition-colors"
+            >
+              <UserPlus size={14} />
+            </button>
+          )}
+          <button
+            onClick={onChat}
+            className="p-1.5 rounded text-text-muted hover:text-brand hover:bg-brand/10 transition-colors"
+          >
+            <MessageSquare size={14} />
+          </button>
+        </div>
       </div>
     </div>
   )

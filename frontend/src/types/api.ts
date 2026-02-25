@@ -115,6 +115,22 @@ export interface ChatMessageDTO {
   created: string
 }
 
+// ─── Driver recommendation ────────────────────────────────────────
+export interface DriverRecommendationDTO {
+  driverId: number
+  driverUsername: string
+  driverEmail: string
+  totalScore: number
+  proximityScore: number
+  workloadScore: number
+  successRateScore: number
+  recencyScore: number
+  distanceMeters: number | null
+  pendingTasksCount: number
+  successRate: number
+  hoursSinceLastActivity: number | null
+}
+
 // ─── Driver position (local state, from WS) ───────────────────────
 export interface DriverPosition {
   taskId: number
