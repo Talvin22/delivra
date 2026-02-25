@@ -14,9 +14,13 @@ public interface UserRepository extends JpaRepository<User, Integer> , JpaSpecif
 
     boolean existsByEmail(String email);
 
+    boolean existsByEmailAndIdNot(String email, Integer id);
+
     Page<User> findByDeletedFalse(Pageable pageable);
 
     boolean existsByUsername(String username);
+
+    boolean existsByUsernameAndIdNot(String username, Integer id);
 
     Optional<User> findByIdAndDeletedFalse(Integer id);
 

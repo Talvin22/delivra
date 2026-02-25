@@ -87,11 +87,11 @@ public class UserServiceImpl implements UserService {
 
        accessValidator.validateAdminOrOwnerAccess(user.getId());
 
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsernameAndIdNot(request.getUsername(), userId)) {
             throw new DataExistException(ApiErrorMessage.USERNAME_ALREADY_EXISTS.getMessage(request.getUsername()));
         }
 
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmailAndIdNot(request.getEmail(), userId)) {
             throw new DataExistException(ApiErrorMessage.EMAIL_ALREADY_EXISTS.getMessage(request.getEmail()));
         }
 

@@ -7,8 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import site.delivra.application.exception.HereApiException;
 import site.delivra.application.exception.InvalidDataException;
+import site.delivra.application.exception.NotDriverException;
 import site.delivra.application.exception.NotFoundException;
 import site.delivra.application.mapper.DeliveryTaskMapper;
 import site.delivra.application.model.constants.ApiErrorMessage;
@@ -42,13 +42,6 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
     @Override
     public DelivraResponse<DeliveryTaskDTO> getById(Integer id) {
-        if (id == null) {
-            throw new IllegalArgumentException("Id cannot be null");
-        }
-        if (id < 0) {
-            throw new IllegalArgumentException("Id should be positive");
-        }
-
         DeliveryTask task = deliveryTaskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage(id)));
 
@@ -58,17 +51,13 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
     @Override
     public DelivraResponse<DeliveryTaskDTO> createDeliveryTask(NewDeliveryTaskRequest newDeliveryTaskRequest) {
-        if (newDeliveryTaskRequest == null) {
-            throw new IllegalArgumentException("DeliveryTask cannot be null");
-        }
-
         User driver = userRepository.findByIdAndDeletedFalse(newDeliveryTaskRequest.getDriverId())
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(newDeliveryTaskRequest.getDriverId())));
 
         boolean isDriver = driver.getRoles().stream()
                 .anyMatch(role -> role.getUserSystemRole() == DelivraServiceUserRole.DRIVER);
         if (!isDriver) {
-            throw new IllegalArgumentException("User with ID: " + driver.getId() + " is not a driver");
+            throw new NotDriverException(ApiErrorMessage.USER_NOT_DRIVER.getMessage(driver.getId()));
         }
 
         DeliveryTask task = taskMapper.createDeliveryTask(newDeliveryTaskRequest);
