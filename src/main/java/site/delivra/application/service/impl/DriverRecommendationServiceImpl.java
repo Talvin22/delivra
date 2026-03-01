@@ -11,6 +11,7 @@ import site.delivra.application.model.entities.DeliveryTask;
 import site.delivra.application.model.entities.NavigationSession;
 import site.delivra.application.model.entities.User;
 import site.delivra.application.model.enums.DeliveryTaskStatus;
+import site.delivra.application.model.enums.NavigationSessionStatus;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.repository.DeliveryTaskRepository;
 import site.delivra.application.repository.NavigationSessionRepository;
@@ -43,7 +44,7 @@ public class DriverRecommendationServiceImpl implements DriverRecommendationServ
     private final NavigationSessionRepository navigationSessionRepository;
 
     @Override
-    public DelivraResponse<List<DriverRecommendationDTO>> recommendDrivers(Integer taskId, int limit) {
+    public DelivraResponse<ArrayList<DriverRecommendationDTO>> recommendDrivers(Integer taskId, int limit) {
         DeliveryTask task = deliveryTaskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage(taskId)));
 
@@ -51,19 +52,17 @@ public class DriverRecommendationServiceImpl implements DriverRecommendationServ
         log.debug("Found {} available drivers for task {}", availableDrivers.size(), taskId);
 
         if (availableDrivers.isEmpty()) {
-            return DelivraResponse.createSuccessful(List.of());
+            return DelivraResponse.createSuccessful(new ArrayList<>());
         }
 
         List<RawMetrics> metrics = availableDrivers.stream()
                 .map(driver -> collectMetrics(driver, task))
                 .toList();
 
-        List<DriverRecommendationDTO> scored = applyWeightedScoring(metrics);
-
-        List<DriverRecommendationDTO> result = scored.stream()
+        ArrayList<DriverRecommendationDTO> result = applyWeightedScoring(metrics).stream()
                 .sorted(Comparator.comparingDouble(DriverRecommendationDTO::getTotalScore).reversed())
                 .limit(limit)
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
 
         return DelivraResponse.createSuccessful(result);
     }

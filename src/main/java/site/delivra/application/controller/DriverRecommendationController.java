@@ -12,7 +12,7 @@ import site.delivra.application.model.dto.recommendation.DriverRecommendationDTO
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.service.DriverRecommendationService;
 
-import java.util.List;
+import java.util.ArrayList;
 
 @Slf4j
 @RestController
@@ -23,10 +23,10 @@ public class DriverRecommendationController {
     private final DriverRecommendationService driverRecommendationService;
 
     @GetMapping("/{taskId}/drivers/recommend")
-    public ResponseEntity<DelivraResponse<List<DriverRecommendationDTO>>> recommendDrivers(
+    public ResponseEntity<DelivraResponse<ArrayList<DriverRecommendationDTO>>> recommendDrivers(
             @PathVariable Integer taskId,
             @RequestParam(name = "limit", defaultValue = "5") int limit) {
-        DelivraResponse<List<DriverRecommendationDTO>> response =
+        DelivraResponse<ArrayList<DriverRecommendationDTO>> response =
                 driverRecommendationService.recommendDrivers(taskId, limit);
         return ResponseEntity.ok(response);
     }

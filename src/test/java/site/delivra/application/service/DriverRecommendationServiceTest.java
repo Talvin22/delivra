@@ -23,6 +23,7 @@ import site.delivra.application.service.impl.DriverRecommendationServiceImpl;
 import site.delivra.application.exception.NotFoundException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -83,7 +84,7 @@ class DriverRecommendationServiceTest {
         when(deliveryTaskRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(task));
         when(userRepository.findAvailableDrivers()).thenReturn(List.of());
 
-        DelivraResponse<List<DriverRecommendationDTO>> result = service.recommendDrivers(1, 5);
+        DelivraResponse<ArrayList<DriverRecommendationDTO>> result = service.recommendDrivers(1, 5);
 
         assertTrue(result.getPayload().isEmpty());
         assertTrue(result.isSuccess());
@@ -105,7 +106,7 @@ class DriverRecommendationServiceTest {
         when(deliveryTaskRepository.countTasksByStatusForDriver(anyInt())).thenReturn(List.of());
         when(deliveryTaskRepository.countPendingTasksForDriver(anyInt(), any())).thenReturn(0L);
 
-        DelivraResponse<List<DriverRecommendationDTO>> result = service.recommendDrivers(1, 5);
+        DelivraResponse<ArrayList<DriverRecommendationDTO>> result = service.recommendDrivers(1, 5);
 
         List<DriverRecommendationDTO> ranked = result.getPayload();
         assertEquals(2, ranked.size());
@@ -124,7 +125,7 @@ class DriverRecommendationServiceTest {
         when(deliveryTaskRepository.countTasksByStatusForDriver(anyInt())).thenReturn(List.of());
         when(deliveryTaskRepository.countPendingTasksForDriver(anyInt(), any())).thenReturn(0L);
 
-        DelivraResponse<List<DriverRecommendationDTO>> result = service.recommendDrivers(1, 1);
+        DelivraResponse<ArrayList<DriverRecommendationDTO>> result = service.recommendDrivers(1, 1);
 
         assertEquals(1, result.getPayload().size());
     }
@@ -141,7 +142,7 @@ class DriverRecommendationServiceTest {
         when(deliveryTaskRepository.countPendingTasksForDriver(eq(10), any())).thenReturn(0L);
         when(deliveryTaskRepository.countPendingTasksForDriver(eq(11), any())).thenReturn(5L);
 
-        DelivraResponse<List<DriverRecommendationDTO>> result = service.recommendDrivers(1, 5);
+        DelivraResponse<ArrayList<DriverRecommendationDTO>> result = service.recommendDrivers(1, 5);
 
         List<DriverRecommendationDTO> ranked = result.getPayload();
         assertEquals(driver1.getId(), ranked.get(0).getDriverId(),
@@ -161,7 +162,7 @@ class DriverRecommendationServiceTest {
         when(deliveryTaskRepository.countTasksByStatusForDriver(anyInt())).thenReturn(List.of());
         when(deliveryTaskRepository.countPendingTasksForDriver(anyInt(), any())).thenReturn(0L);
 
-        DelivraResponse<List<DriverRecommendationDTO>> result = service.recommendDrivers(1, 5);
+        DelivraResponse<ArrayList<DriverRecommendationDTO>> result = service.recommendDrivers(1, 5);
 
         DriverRecommendationDTO dto = result.getPayload().get(0);
         assertEquals(0.0, dto.getProximityScore(), 0.001);
@@ -173,7 +174,7 @@ class DriverRecommendationServiceTest {
         when(deliveryTaskRepository.findByIdAndDeletedFalse(1)).thenReturn(Optional.of(task));
         when(userRepository.findAvailableDrivers()).thenReturn(List.of());
 
-        DelivraResponse<List<DriverRecommendationDTO>> result = service.recommendDrivers(1, 5);
+        DelivraResponse<ArrayList<DriverRecommendationDTO>> result = service.recommendDrivers(1, 5);
 
         assertTrue(result.isSuccess());
         assertNotNull(result.getPayload());
