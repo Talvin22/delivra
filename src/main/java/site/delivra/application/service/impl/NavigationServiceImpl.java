@@ -58,7 +58,16 @@ public class NavigationServiceImpl implements NavigationService {
         }
 
         if (task.getLatitude() == null || task.getLongitude() == null) {
-            throw new InvalidDataException(ApiErrorMessage.TASK_MISSING_COORDINATES.getMessage(taskId));
+            try {
+                HereApiService.GeocodingResult geo = hereApiService.geocodeAddress(task.getAddress());
+                task.setLatitude(geo.latitude());
+                task.setLongitude(geo.longitude());
+                taskRepository.save(task);
+                log.info("Geocoded address on navigation start: task={}, address={}", taskId, task.getAddress());
+            } catch (Exception e) {
+                log.warn("Geocoding on navigation start failed for task {}: {}", taskId, e.getMessage());
+                throw new InvalidDataException(ApiErrorMessage.TASK_MISSING_COORDINATES.getMessage(taskId));
+            }
         }
 
         RouteDTO route = null;

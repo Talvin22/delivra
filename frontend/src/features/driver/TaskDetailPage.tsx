@@ -38,9 +38,12 @@ export function TaskDetailPage() {
       })
     },
     onSuccess: () => navigate(`/driver/tasks/${taskId}/navigate`),
-    onError: (err: { response?: { status?: number } }) => {
+    onError: (err: { response?: { status?: number; data?: { message?: string } } }) => {
       if (err?.response?.status === 409) {
-        navigate(`/driver/tasks/${taskId}/navigate`)
+        const msg = err?.response?.data?.message ?? ''
+        if (msg.includes('active navigation session')) {
+          navigate(`/driver/tasks/${taskId}/navigate`)
+        }
       }
     },
   })

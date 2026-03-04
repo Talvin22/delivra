@@ -193,9 +193,10 @@ export function NavigationPage() {
     queryFn: () => tasksApi.getById(taskId).then(r => r.data.payload),
   })
 
-  const { isLoading: sessionLoading, data: sessionData } = useQuery({
+  const { isLoading: sessionLoading, data: sessionData, isError: sessionError } = useQuery({
     queryKey: ['nav-session', taskId],
     queryFn: () => navigationApi.getActive(taskId).then(r => r.data.payload),
+    retry: false,
   })
 
   useEffect(() => {
@@ -317,6 +318,16 @@ export function NavigationPage() {
   })
 
   if (sessionLoading) return <FullScreenLoader />
+
+  if (sessionError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4 bg-bg-base px-6">
+        <p className="text-text-primary font-semibold text-center">Навигационная сессия не найдена</p>
+        <p className="text-text-muted text-sm text-center">Вернитесь к задаче и запустите навигацию заново</p>
+        <Button onClick={() => navigate(-1)}>Назад</Button>
+      </div>
+    )
+  }
 
   const dest = route?.waypoints?.at(-1)
   const instruction = route?.instructions?.[instrIdx]
