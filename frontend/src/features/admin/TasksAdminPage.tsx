@@ -46,8 +46,8 @@ export function TasksAdminPage() {
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-text-primary">Задачи</h1>
-        <span className="text-sm text-text-muted">{filtered.length} записей</span>
+        <h1 className="text-xl font-semibold text-text-primary">Tasks</h1>
+        <span className="text-sm text-text-muted">{filtered.length} records</span>
       </div>
 
       {/* Filters */}
@@ -56,7 +56,7 @@ export function TasksAdminPage() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
           <input
             className="bg-bg-base border border-bg-border rounded-md pl-8 pr-3 py-2 text-sm text-text-primary placeholder:text-text-muted outline-none focus:border-brand transition-colors w-full sm:w-60"
-            placeholder="Поиск по адресу, ID..."
+            placeholder="Search by address, ID..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -73,7 +73,7 @@ export function TasksAdminPage() {
                   : 'text-text-secondary hover:bg-bg-raised',
               )}
             >
-              {s === 'ALL' ? 'Все' : TASK_STATUS_LABEL[s]}
+              {s === 'ALL' ? 'All' : TASK_STATUS_LABEL[s]}
             </button>
           ))}
         </div>
@@ -82,13 +82,13 @@ export function TasksAdminPage() {
       {isLoading ? <FullScreenLoader /> : (
         <div className="bg-bg-surface border border-bg-border rounded-lg overflow-hidden">
           <div className="hidden md:grid grid-cols-[50px_1fr_100px_80px_100px_60px] gap-3 px-4 py-2.5 border-b border-bg-border">
-            {['ID', 'Адрес', 'Статус', 'Водитель', 'Создано', ''].map(h => (
+            {['ID', 'Address', 'Status', 'Driver', 'Created', ''].map(h => (
               <span key={h} className="text-xs text-text-muted font-medium uppercase tracking-wide">{h}</span>
             ))}
           </div>
 
           {filtered.length === 0 ? (
-            <div className="text-center py-12 text-text-muted text-sm">Нет задач</div>
+            <div className="text-center py-12 text-text-muted text-sm">No tasks</div>
           ) : filtered.map(task => (
             <div
               key={task.id}

@@ -43,8 +43,8 @@ export function DriverTaskListPage() {
     <div className="h-full overflow-y-auto p-4 md:p-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">Мои задачи</h1>
-          <p className="text-sm text-text-secondary mt-0.5">Привет, {user?.username} 👋</p>
+          <h1 className="text-xl font-semibold text-text-primary">My Tasks</h1>
+          <p className="text-sm text-text-secondary mt-0.5">Hello, {user?.username} 👋</p>
         </div>
         <Button variant="ghost" size="icon" onClick={() => refetch()} loading={isRefetching}>
           <RefreshCw size={16} />
@@ -54,7 +54,7 @@ export function DriverTaskListPage() {
       {sorted.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-text-muted">
           <MapPin size={40} className="mb-3 opacity-40" />
-          <p className="text-sm">Задач пока нет</p>
+          <p className="text-sm">No tasks yet</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -93,7 +93,7 @@ function TaskCard({ task, onClick }: { task: DeliveryTaskDTO; onClick: () => voi
       </div>
       {isActive && (
         <div className="mt-2 pt-2 border-t border-brand/20">
-          <span className="text-xs text-brand font-medium animate-pulse2">● Маршрут активен</span>
+          <span className="text-xs text-brand font-medium animate-pulse2">● Route active</span>
         </div>
       )}
     </button>

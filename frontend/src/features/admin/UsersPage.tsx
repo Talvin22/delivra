@@ -55,9 +55,9 @@ export function UsersPage() {
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-text-primary">Пользователи</h1>
+        <h1 className="text-xl font-semibold text-text-primary">Users</h1>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus size={14} /> Добавить
+          <Plus size={14} /> Add
         </Button>
       </div>
 
@@ -65,7 +65,7 @@ export function UsersPage() {
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
         <input
           className="w-full max-w-xs bg-bg-base border border-bg-border rounded-md pl-8 pr-3 py-2 text-sm text-text-primary placeholder:text-text-muted outline-none focus:border-brand transition-colors"
-          placeholder="Поиск по имени, email..."
+          placeholder="Search by name, email..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -74,13 +74,13 @@ export function UsersPage() {
       {isLoading ? <FullScreenLoader /> : (
         <div className="bg-bg-surface border border-bg-border rounded-lg overflow-hidden">
           <div className="hidden md:grid grid-cols-[50px_1fr_1fr_1fr_100px] gap-3 px-4 py-2.5 border-b border-bg-border">
-            {['ID', 'Имя', 'Email', 'Роли', ''].map(h => (
+            {['ID', 'Name', 'Email', 'Roles', ''].map(h => (
               <span key={h} className="text-xs text-text-muted font-medium uppercase tracking-wide">{h}</span>
             ))}
           </div>
 
           {filtered.length === 0 ? (
-            <div className="text-center py-12 text-text-muted text-sm">Нет пользователей</div>
+            <div className="text-center py-12 text-text-muted text-sm">No users</div>
           ) : filtered.map(user => (
             <UserRow
               key={user.id}
@@ -93,21 +93,21 @@ export function UsersPage() {
       )}
 
       {/* Create modal */}
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Новый пользователь">
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="New user">
         <CreateUserForm
           onSubmit={data => createUser.mutate(data)}
           loading={createUser.isPending}
-          error={createUser.isError ? 'Ошибка создания' : undefined}
+          error={createUser.isError ? 'Failed to create user' : undefined}
         />
       </Modal>
 
       {/* Edit roles modal */}
-      <Modal open={!!rolesUser} onClose={() => setRolesUser(null)} title={`Роли: ${rolesUser?.username}`}>
+      <Modal open={!!rolesUser} onClose={() => setRolesUser(null)} title={`Roles: ${rolesUser?.username}`}>
         {rolesUser && (
           <EditRolesForm
             currentRoles={rolesUser.roles.map(r => r.name)}
             loading={updateRoles.isPending}
-            error={updateRoles.isError ? 'Ошибка обновления ролей' : undefined}
+            error={updateRoles.isError ? 'Failed to update roles' : undefined}
             onSubmit={roles => updateRoles.mutate({ id: rolesUser.id, roles })}
           />
         )}
@@ -135,14 +135,14 @@ function UserRow({ user, onDelete, onEditRoles }: { user: UserSearchDTO; onDelet
         <button
           onClick={onEditRoles}
           className="p-1.5 rounded text-text-muted hover:text-brand hover:bg-brand/10 transition-colors"
-          title="Изменить роли"
+          title="Edit roles"
         >
           <Shield size={14} />
         </button>
         <button
           onClick={onDelete}
           className="p-1.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
-          title="Удалить"
+          title="Delete"
         >
           <Trash2 size={14} />
         </button>
@@ -198,7 +198,7 @@ function EditRolesForm({ currentRoles, loading, error, onSubmit }: {
         loading={loading}
         disabled={selected.size === 0}
       >
-        Сохранить
+        Save
       </Button>
     </div>
   )
@@ -212,11 +212,11 @@ function CreateUserForm({ onSubmit, loading, error }: {
   const { register, handleSubmit, formState: { errors } } = useForm<CreateForm>()
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
-      <Input label="Имя пользователя *" {...register('username', { required: 'Обязательно' })} error={errors.username?.message} />
-      <Input label="Email *" type="email" {...register('email', { required: 'Обязательно' })} error={errors.email?.message} />
-      <Input label="Пароль *" type="password" {...register('password', { required: 'Обязательно', minLength: { value: 6, message: 'Минимум 6 символов' } })} error={errors.password?.message} />
+      <Input label="Username *" {...register('username', { required: 'Required' })} error={errors.username?.message} />
+      <Input label="Email *" type="email" {...register('email', { required: 'Required' })} error={errors.email?.message} />
+      <Input label="Password *" type="password" {...register('password', { required: 'Required', minLength: { value: 6, message: 'Minimum 6 characters' } })} error={errors.password?.message} />
       {error && <p className="text-sm text-danger">{error}</p>}
-      <Button type="submit" loading={loading} className="mt-1">Создать</Button>
+      <Button type="submit" loading={loading} className="mt-1">Create</Button>
     </form>
   )
 }

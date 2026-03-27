@@ -72,7 +72,7 @@ export function TaskDetailPage() {
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-text-muted">Задача #{task.id}</span>
+            <span className="text-xs font-mono text-text-muted">Task #{task.id}</span>
             <Badge variant={BADGE_VARIANT[task.status]}>
               {TASK_STATUS_LABEL[task.status]}
             </Badge>
@@ -91,7 +91,7 @@ export function TaskDetailPage() {
               <MapPin size={16} className="text-danger" />
             </div>
             <div>
-              <p className="text-xs text-text-muted mb-1">Адрес доставки</p>
+              <p className="text-xs text-text-muted mb-1">Delivery address</p>
               <p className="text-text-primary font-medium">{task.address}</p>
               {task.latitude && task.longitude && (
                 <p className="text-xs text-text-muted mt-1 font-mono">
@@ -104,10 +104,10 @@ export function TaskDetailPage() {
 
         {/* Info */}
         <div className="bg-bg-surface border border-bg-border rounded-lg divide-y divide-bg-border mb-6">
-          <InfoRow label="Создано" value={formatDateTime(task.created)} />
-          <InfoRow label="Создал" value={task.createdBy} />
-          {task.startTime && <InfoRow label="Начато" value={formatDateTime(task.startTime)} />}
-          {task.endTime && <InfoRow label="Завершено" value={formatDateTime(task.endTime)} />}
+          <InfoRow label="Created" value={formatDateTime(task.created)} />
+          <InfoRow label="Created by" value={task.createdBy} />
+          {task.startTime && <InfoRow label="Started" value={formatDateTime(task.startTime)} />}
+          {task.endTime && <InfoRow label="Finished" value={formatDateTime(task.endTime)} />}
         </div>
 
         {/* Navigation button */}
@@ -120,7 +120,7 @@ export function TaskDetailPage() {
             disabled={anyPending}
           >
             <Navigation size={18} />
-            {isActive ? 'Продолжить навигацию' : 'Начать навигацию'}
+            {isActive ? 'Continue navigation' : 'Start navigation'}
           </Button>
         )}
 
@@ -129,17 +129,17 @@ export function TaskDetailPage() {
             {(() => {
               const err = startNav.error as { response?: { status?: number; data?: { message?: string } }; message?: string }
               if (err?.response?.status === 409) return null
-              if (err?.response?.status === 401) return 'Сессия истекла — войдите снова'
-              if (err?.response?.status === 403) return 'Нет доступа к этой задаче'
-              if (err?.response?.status === 404) return 'Задача не найдена'
-              return err?.response?.data?.message ?? err?.message ?? 'Не удалось начать навигацию'
+              if (err?.response?.status === 401) return 'Session expired — please sign in again'
+              if (err?.response?.status === 403) return 'No access to this task'
+              if (err?.response?.status === 404) return 'Task not found'
+              return err?.response?.data?.message ?? err?.message ?? 'Failed to start navigation'
             })()}
           </p>
         )}
 
         {/* Status management */}
         <div className="bg-bg-surface border border-bg-border rounded-lg p-4">
-          <p className="text-xs text-text-muted mb-3">Управление статусом</p>
+          <p className="text-xs text-text-muted mb-3">Status management</p>
           <div className="flex flex-col gap-2">
 
             {/* Revert accidental completion */}
@@ -153,7 +153,7 @@ export function TaskDetailPage() {
                 disabled={anyPending}
               >
                 <RotateCcw size={15} />
-                Вернуть в работу
+                Reopen task
               </Button>
             )}
 
@@ -168,7 +168,7 @@ export function TaskDetailPage() {
                 disabled={anyPending}
               >
                 <RotateCcw size={15} />
-                Восстановить задачу
+                Restore task
               </Button>
             )}
 
@@ -183,7 +183,7 @@ export function TaskDetailPage() {
                 disabled={anyPending}
               >
                 <XCircle size={15} />
-                Отменить задачу
+                Cancel task
               </Button>
             )}
 
@@ -191,7 +191,7 @@ export function TaskDetailPage() {
 
           {changeStatus.isError && (
             <p className="text-xs text-danger mt-2 text-center">
-              Не удалось изменить статус
+              Failed to update status
             </p>
           )}
         </div>

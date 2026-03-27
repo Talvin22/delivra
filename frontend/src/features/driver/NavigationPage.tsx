@@ -322,9 +322,9 @@ export function NavigationPage() {
   if (sessionError) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4 bg-bg-base px-6">
-        <p className="text-text-primary font-semibold text-center">Навигационная сессия не найдена</p>
-        <p className="text-text-muted text-sm text-center">Вернитесь к задаче и запустите навигацию заново</p>
-        <Button onClick={() => navigate(-1)}>Назад</Button>
+        <p className="text-text-primary font-semibold text-center">Navigation session not found</p>
+        <p className="text-text-muted text-sm text-center">Go back to the task and start navigation again</p>
+        <Button onClick={() => navigate(-1)}>Back</Button>
       </div>
     )
   }
@@ -387,7 +387,7 @@ export function NavigationPage() {
             <div className="min-w-0">
               <p className="text-sm font-semibold text-text-primary truncate">{instruction.instruction}</p>
               {instruction.distanceInMeters > 0 && (
-                <p className="text-xs text-brand mt-0.5">через {formatDistance(instruction.distanceInMeters)}</p>
+                <p className="text-xs text-brand mt-0.5">in {formatDistance(instruction.distanceInMeters)}</p>
               )}
             </div>
           </div>
@@ -399,7 +399,7 @@ export function NavigationPage() {
         <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[500] pointer-events-none">
           <div className="flex items-center gap-2 bg-warning/10 border border-warning/40 rounded-lg px-3 py-1.5">
             <span className="text-warning text-xs">⚠</span>
-            <span className="text-xs text-warning font-medium">Перестройка маршрута...</span>
+            <span className="text-xs text-warning font-medium">Rerouting...</span>
           </div>
         </div>
       )}
@@ -430,7 +430,7 @@ export function NavigationPage() {
             ? 'bg-bg-surface/70 border-bg-border text-text-muted'
             : 'bg-brand border-brand text-white shadow-brand/40'
           }`}
-        title="Вернуться к маркеру"
+        title="Re-center"
       >
         <Crosshair size={20} />
       </button>
@@ -445,19 +445,19 @@ export function NavigationPage() {
               {remainingM !== null && (
                 <div className="text-center">
                   <p className="text-lg font-bold text-text-primary">{formatDistance(remainingM)}</p>
-                  <p className="text-xs text-text-muted">Осталось</p>
+                  <p className="text-xs text-text-muted">Remaining</p>
                 </div>
               )}
               {remainingSec !== null && (
                 <div className="text-center">
                   <p className="text-lg font-bold text-text-primary">{formatDuration(remainingSec)}</p>
-                  <p className="text-xs text-text-muted">Время</p>
+                  <p className="text-xs text-text-muted">ETA</p>
                 </div>
               )}
               {task && (
                 <div className="text-center max-w-[140px]">
                   <p className="text-xs font-medium text-text-primary truncate">{task.address}</p>
-                  <p className="text-xs text-text-muted">Адрес</p>
+                  <p className="text-xs text-text-muted">Address</p>
                 </div>
               )}
             </div>
@@ -472,7 +472,7 @@ export function NavigationPage() {
               onClick={() => setChatOpen(true)}
             >
               <MessageSquare size={16} />
-              Чат
+              Chat
             </Button>
 
             <Button
@@ -483,7 +483,7 @@ export function NavigationPage() {
               loading={stopNav.isPending}
               disabled={isPending}
             >
-              Прервать
+              Abort
             </Button>
 
             <Button
@@ -495,7 +495,7 @@ export function NavigationPage() {
               disabled={isPending}
             >
               <CheckCircle size={16} />
-              Доставлено
+              Delivered
             </Button>
           </div>
         </div>

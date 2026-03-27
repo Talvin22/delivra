@@ -37,7 +37,7 @@ export function DriverRecommendationModal({ taskId, onClose, onSuccess }: Props)
     <Modal
       open
       onClose={onClose}
-      title={`Рекомендованные водители — задача #${taskId}`}
+      title={`Recommended drivers — task #${taskId}`}
       className="max-w-lg"
     >
       {isLoading && (
@@ -47,11 +47,11 @@ export function DriverRecommendationModal({ taskId, onClose, onSuccess }: Props)
       )}
 
       {isError && (
-        <p className="text-sm text-danger text-center py-4">Ошибка загрузки рекомендаций</p>
+        <p className="text-sm text-danger text-center py-4">Failed to load recommendations</p>
       )}
 
       {data && data.length === 0 && (
-        <p className="text-sm text-text-muted text-center py-4">Нет доступных водителей</p>
+        <p className="text-sm text-text-muted text-center py-4">No available drivers</p>
       )}
 
       {data && data.length > 0 && (
@@ -70,7 +70,7 @@ export function DriverRecommendationModal({ taskId, onClose, onSuccess }: Props)
 
       <div className="pt-3 border-t border-bg-border mt-3">
         <Button variant="ghost" className="w-full" onClick={onClose}>
-          Отмена
+          Cancel
         </Button>
       </div>
     </Modal>
@@ -121,24 +121,24 @@ function DriverCard({
         <div className="flex items-center gap-2 flex-shrink-0">
           <div className="text-right">
             <p className="text-lg font-bold text-brand leading-none">{driver.totalScore}</p>
-            <p className="text-[10px] text-text-muted">балл</p>
+            <p className="text-[10px] text-text-muted">score</p>
           </div>
           <Button size="sm" onClick={onAssign} loading={isAssigning}>
-            Назначить
+            Assign
           </Button>
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <ScoreBar value={driver.proximityScore} label="Близость" icon={<MapPin size={10} />} />
-        <ScoreBar value={driver.workloadScore} label="Загрузка" icon={<Briefcase size={10} />} />
-        <ScoreBar value={driver.successRateScore} label="Успешность" icon={<TrendingUp size={10} />} />
-        <ScoreBar value={driver.recencyScore} label="Активность" icon={<Clock size={10} />} />
+        <ScoreBar value={driver.proximityScore} label="Proximity" icon={<MapPin size={10} />} />
+        <ScoreBar value={driver.workloadScore} label="Workload" icon={<Briefcase size={10} />} />
+        <ScoreBar value={driver.successRateScore} label="Success rate" icon={<TrendingUp size={10} />} />
+        <ScoreBar value={driver.recencyScore} label="Recency" icon={<Clock size={10} />} />
       </div>
 
       {driver.distanceMeters != null && (
         <p className="text-[10px] text-text-muted mt-2">
-          📍 {(driver.distanceMeters / 1000).toFixed(1)} км от точки назначения
+          📍 {(driver.distanceMeters / 1000).toFixed(1)} km from destination
         </p>
       )}
     </div>

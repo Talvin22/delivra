@@ -129,9 +129,9 @@ export function DispatcherPage() {
             <Marker key={dp.taskId} position={[dp.lat, dp.lng]} icon={makeDriverMapIcon(`#${dp.taskId}`)}>
               <Popup>
                 <div className="text-xs">
-                  <p className="font-semibold">Задача #{dp.taskId}</p>
+                  <p className="font-semibold">Task #{dp.taskId}</p>
                   <p className={dp.onRoute ? 'text-green-600' : 'text-red-600'}>
-                    {dp.onRoute ? 'На маршруте' : 'Вне маршрута'}
+                    {dp.onRoute ? 'On route' : 'Off route'}
                   </p>
                 </div>
               </Popup>
@@ -161,7 +161,7 @@ export function DispatcherPage() {
         <button
           onClick={() => setPanelOpen(p => !p)}
           className="absolute left-0 top-20 -translate-x-full bg-bg-surface border border-r-0 border-bg-border rounded-l-lg px-1.5 py-3 flex items-center text-text-secondary hover:text-brand transition-colors shadow-lg"
-          title={panelOpen ? 'Скрыть панель' : 'Показать панель'}
+          title={panelOpen ? 'Hide panel' : 'Show panel'}
         >
           <ChevronLeft size={14} className={cn('transition-transform', panelOpen ? '' : 'rotate-180')} />
         </button>
@@ -171,14 +171,14 @@ export function DispatcherPage() {
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-bg-border flex-shrink-0">
             <span className="text-sm font-semibold text-text-primary">
-              Задачи <span className="text-text-muted font-normal">({filtered.length})</span>
+              Tasks <span className="text-text-muted font-normal">({filtered.length})</span>
             </span>
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" onClick={() => refetch()}>
                 <RefreshCw size={14} />
               </Button>
               <Button size="sm" onClick={() => setTaskFormOpen(true)}>
-                <Plus size={14} /> Создать
+                <Plus size={14} /> Create
               </Button>
             </div>
           </div>
@@ -196,7 +196,7 @@ export function DispatcherPage() {
                     : 'text-text-secondary hover:text-text-primary hover:bg-bg-raised',
                 )}
               >
-                {s === 'ALL' ? 'Все' : TASK_STATUS_LABEL[s]}
+                {s === 'ALL' ? 'All' : TASK_STATUS_LABEL[s]}
               </button>
             ))}
           </div>
@@ -204,9 +204,9 @@ export function DispatcherPage() {
           {/* Task list */}
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
-              <div className="flex items-center justify-center h-24 text-text-muted text-sm">Загрузка...</div>
+              <div className="flex items-center justify-center h-24 text-text-muted text-sm">Loading...</div>
             ) : filtered.length === 0 ? (
-              <div className="flex items-center justify-center h-24 text-text-muted text-sm">Нет задач</div>
+              <div className="flex items-center justify-center h-24 text-text-muted text-sm">No tasks</div>
             ) : (
               filtered.map(task => (
                 <TaskRow
@@ -223,7 +223,7 @@ export function DispatcherPage() {
           {driverPositions.size > 0 && (
             <div className="p-2 border-t border-bg-border flex-shrink-0">
               <p className="text-xs text-text-muted">
-                🚛 {driverPositions.size} {driverPositions.size === 1 ? 'водитель' : 'водителей'} онлайн
+                🚛 {driverPositions.size} {driverPositions.size === 1 ? 'driver' : 'drivers'} online
               </p>
             </div>
           )}
@@ -276,7 +276,7 @@ function TaskRow({
           {task.status === 'PENDING' && (
             <button
               onClick={onRecommend}
-              title="Назначить водителя"
+              title="Assign driver"
               className="p-1.5 rounded text-text-muted hover:text-success hover:bg-success/10 transition-colors"
             >
               <UserPlus size={14} />

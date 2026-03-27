@@ -29,20 +29,20 @@ export function AdminDashboard() {
 
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6 max-w-5xl mx-auto">
-      <h1 className="text-xl font-semibold text-text-primary mb-6">Дашборд</h1>
+      <h1 className="text-xl font-semibold text-text-primary mb-6">Dashboard</h1>
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-        <StatCard icon={<Users size={20} className="text-brand" />} label="Пользователей" value={userCounts.total} sub={`${userCounts.drivers} водителей`} />
-        <StatCard icon={<ListTodo size={20} className="text-warning" />} label="Задач всего" value={taskCounts.total} sub={`${taskCounts.pending} ожидают`} />
-        <StatCard icon={<Navigation size={20} className="text-success" />} label="В пути" value={taskCounts.inProgress} sub="активных маршрутов" />
-        <StatCard icon={<TrendingUp size={20} className="text-brand" />} label="Выполнено" value={taskCounts.completed} sub={taskCounts.total > 0 ? `${Math.round(taskCounts.completed / taskCounts.total * 100)}%` : '0%'} />
+        <StatCard icon={<Users size={20} className="text-brand" />} label="Users" value={userCounts.total} sub={`${userCounts.drivers} drivers`} />
+        <StatCard icon={<ListTodo size={20} className="text-warning" />} label="Total tasks" value={taskCounts.total} sub={`${taskCounts.pending} pending`} />
+        <StatCard icon={<Navigation size={20} className="text-success" />} label="In progress" value={taskCounts.inProgress} sub="active routes" />
+        <StatCard icon={<TrendingUp size={20} className="text-brand" />} label="Completed" value={taskCounts.completed} sub={taskCounts.total > 0 ? `${Math.round(taskCounts.completed / taskCounts.total * 100)}%` : '0%'} />
       </div>
 
       {/* Recent tasks */}
       <div className="bg-bg-surface border border-bg-border rounded-lg">
         <div className="px-4 py-3 border-b border-bg-border">
-          <h2 className="text-sm font-semibold text-text-primary">Последние задачи</h2>
+          <h2 className="text-sm font-semibold text-text-primary">Recent tasks</h2>
         </div>
         <div className="divide-y divide-bg-border">
           {(tasks?.content.slice(0, 10) ?? []).map(t => (

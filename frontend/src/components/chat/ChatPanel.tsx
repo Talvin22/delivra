@@ -52,7 +52,7 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-bg-border flex-shrink-0">
-        <span className="font-semibold text-brand text-sm">💬 Чат — Задача #{taskId}</span>
+        <span className="font-semibold text-brand text-sm">💬 Chat — Task #{taskId}</span>
         <button onClick={onClose} className="text-text-muted hover:text-text-primary p-1 rounded">
           <X size={18} />
         </button>
@@ -61,7 +61,7 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
         {messages.length === 0 && (
-          <p className="text-center text-text-muted text-xs mt-8">Нет сообщений</p>
+          <p className="text-center text-text-muted text-xs mt-8">No messages</p>
         )}
         {messages.map(msg => {
           const mine = user?.id === msg.senderId
@@ -86,7 +86,7 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
       {/* Connection status */}
       {!connected && (
         <div className="px-3 py-1.5 bg-warning/10 border-t border-warning/20 flex-shrink-0">
-          <p className="text-xs text-warning text-center">Нет подключения — сообщения недоступны</p>
+          <p className="text-xs text-warning text-center">No connection — messages unavailable</p>
         </div>
       )}
 
@@ -94,7 +94,7 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
       <div className="flex items-center gap-2 p-3 border-t border-bg-border flex-shrink-0">
         <input
           className="flex-1 bg-bg-base border border-bg-border rounded-full px-4 py-2 text-sm text-text-primary placeholder:text-text-muted outline-none focus:border-brand transition-colors disabled:opacity-50"
-          placeholder={connected ? 'Сообщение...' : 'Нет подключения...'}
+          placeholder={connected ? 'Message...' : 'No connection...'}
           value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && send()}
