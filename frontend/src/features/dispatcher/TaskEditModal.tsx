@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import { RotateCcw, XCircle } from 'lucide-react'
+import { RotateCcw, XCircle, Trash2 } from 'lucide-react'
 import { tasksApi } from '@/api/tasks'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
@@ -24,6 +25,7 @@ interface Props {
 
 export function TaskEditModal({ task, drivers, onClose, onSuccess }: Props) {
   const qc = useQueryClient()
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const { register, handleSubmit, formState: { errors, isDirty } } = useForm<FormData>({
     defaultValues: {
@@ -46,7 +48,12 @@ export function TaskEditModal({ task, drivers, onClose, onSuccess }: Props) {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['dispatcher-tasks'] }); onSuccess(); onClose() },
   })
 
-  const anyPending = update.isPending || changeStatus.isPending
+  const deleteTask = useMutation({
+    mutationFn: () => tasksApi.delete(task.id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['dispatcher-tasks'] }); onSuccess(); onClose() },
+  })
+
+  const anyPending = update.isPending || changeStatus.isPending || deleteTask.isPending
 
   return (
     <Modal open onClose={onClose} title={`Task #${task.id}`}>
@@ -115,6 +122,32 @@ export function TaskEditModal({ task, drivers, onClose, onSuccess }: Props) {
             </Button>
           </div>
         )}
+
+        {/* Delete */}
+        <div className="border-t border-bg-border pt-3">
+          {confirmDelete ? (
+            <div className="flex gap-2">
+              <Button variant="ghost" size="md" className="flex-1" onClick={() => setConfirmDelete(false)} disabled={anyPending}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger" size="md" className="flex-1"
+                onClick={() => deleteTask.mutate()}
+                loading={deleteTask.isPending} disabled={anyPending}
+              >
+                <Trash2 size={15} /> Confirm delete
+              </Button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              disabled={anyPending}
+              className="flex items-center gap-2 text-xs text-text-muted hover:text-danger transition-colors disabled:opacity-40"
+            >
+              <Trash2 size={13} /> Delete task
+            </button>
+          )}
+        </div>
       </div>
     </Modal>
   )
