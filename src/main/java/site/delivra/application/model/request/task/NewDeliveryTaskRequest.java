@@ -13,7 +13,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class NewDeliveryTaskRequest implements Serializable {
 
-    @NotNull(message = "driverId cannot be null")
     private Integer driverId;
 
     @NotBlank(message = "address cannot be empty")

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { ChatPanel } from '@/components/chat/ChatPanel'
 import { TaskFormModal } from './TaskFormModal'
+import { TaskEditModal } from './TaskEditModal'
 import { DriverRecommendationModal } from './DriverRecommendationModal'
 import { formatDateTime, TASK_STATUS_LABEL } from '@/lib/formatters'
 import type { DeliveryTaskDTO, DeliveryTaskStatus, NavigationEventDTO, DriverPosition } from '@/types/api'
@@ -49,6 +50,7 @@ export function DispatcherPage() {
   const [chatTaskId, setChatTaskId] = useState<number | null>(null)
   const [taskFormOpen, setTaskFormOpen] = useState(false)
   const [recommendTaskId, setRecommendTaskId] = useState<number | null>(null)
+  const [editTask, setEditTask] = useState<DeliveryTaskDTO | null>(null)
   const [filterStatus, setFilterStatus] = useState<DeliveryTaskStatus | 'ALL'>('ALL')
   const [panelOpen, setPanelOpen] = useState(true)
 
@@ -213,6 +215,7 @@ export function DispatcherPage() {
                   key={task.id}
                   task={task}
                   hasDriver={driverPositions.has(task.id)}
+                  onEdit={() => setEditTask(task)}
                   onChat={() => setChatTaskId(task.id)}
                   onRecommend={() => setRecommendTaskId(task.id)}
                 />
@@ -230,6 +233,14 @@ export function DispatcherPage() {
         </div>
       </div>
 
+      {editTask && (
+        <TaskEditModal
+          task={editTask}
+          drivers={drivers ?? []}
+          onClose={() => setEditTask(null)}
+          onSuccess={handleTaskUpdate}
+        />
+      )}
       {taskFormOpen && (
         <TaskFormModal
           open={taskFormOpen}
@@ -253,15 +264,19 @@ export function DispatcherPage() {
 }
 
 function TaskRow({
-  task, hasDriver, onChat, onRecommend,
+  task, hasDriver, onEdit, onChat, onRecommend,
 }: {
   task: DeliveryTaskDTO
   hasDriver: boolean
+  onEdit: () => void
   onChat: () => void
   onRecommend: () => void
 }) {
   return (
-    <div className="border-b border-bg-border hover:bg-bg-raised transition-colors">
+    <div
+      className="border-b border-bg-border hover:bg-bg-raised transition-colors cursor-pointer"
+      onClick={onEdit}
+    >
       <div className="flex items-start gap-2 p-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1">
@@ -272,7 +287,7 @@ function TaskRow({
           <p className="text-xs text-text-primary truncate">{task.address}</p>
           <p className="text-[10px] text-text-muted mt-0.5">{formatDateTime(task.created)}</p>
         </div>
-        <div className="flex gap-0.5 flex-shrink-0">
+        <div className="flex gap-0.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
           {task.status === 'PENDING' && (
             <button
               onClick={onRecommend}

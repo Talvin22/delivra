@@ -51,17 +51,18 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
     @Override
     public DelivraResponse<DeliveryTaskDTO> createDeliveryTask(NewDeliveryTaskRequest newDeliveryTaskRequest) {
-        User driver = userRepository.findByIdAndDeletedFalse(newDeliveryTaskRequest.getDriverId())
-                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(newDeliveryTaskRequest.getDriverId())));
-
-        boolean isDriver = driver.getRoles().stream()
-                .anyMatch(role -> role.getUserSystemRole() == DelivraServiceUserRole.DRIVER);
-        if (!isDriver) {
-            throw new NotDriverException(ApiErrorMessage.USER_NOT_DRIVER.getMessage(driver.getId()));
-        }
-
         DeliveryTask task = taskMapper.createDeliveryTask(newDeliveryTaskRequest);
-        task.setUser(driver);
+
+        if (newDeliveryTaskRequest.getDriverId() != null) {
+            User driver = userRepository.findByIdAndDeletedFalse(newDeliveryTaskRequest.getDriverId())
+                    .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(newDeliveryTaskRequest.getDriverId())));
+            boolean isDriver = driver.getRoles().stream()
+                    .anyMatch(role -> role.getUserSystemRole() == DelivraServiceUserRole.DRIVER);
+            if (!isDriver) {
+                throw new NotDriverException(ApiErrorMessage.USER_NOT_DRIVER.getMessage(driver.getId()));
+            }
+            task.setUser(driver);
+        }
 
         if (task.getLatitude() == null || task.getLongitude() == null) {
             try {
