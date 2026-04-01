@@ -19,7 +19,7 @@ export function DriverRecommendationModal({ taskId, onClose, onSuccess }: Props)
   const { data, isLoading, isError } = useQuery({
     queryKey: ['recommendations', taskId],
     queryFn: async () => {
-      const res = await tasksApi.getRecommendations(taskId, 5)
+      const res = await tasksApi.getRecommendations(taskId, 20)
       return res.data.payload
     },
   })

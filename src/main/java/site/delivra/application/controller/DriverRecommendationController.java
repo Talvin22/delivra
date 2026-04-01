@@ -25,7 +25,7 @@ public class DriverRecommendationController {
     @GetMapping("/{taskId}/drivers/recommend")
     public ResponseEntity<DelivraResponse<ArrayList<DriverRecommendationDTO>>> recommendDrivers(
             @PathVariable Integer taskId,
-            @RequestParam(name = "limit", defaultValue = "5") int limit) {
+            @RequestParam(name = "limit", defaultValue = "20") int limit) {
         DelivraResponse<ArrayList<DriverRecommendationDTO>> response =
                 driverRecommendationService.recommendDrivers(taskId, limit);
         return ResponseEntity.ok(response);
