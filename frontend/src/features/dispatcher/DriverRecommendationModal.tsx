@@ -114,7 +114,14 @@ function DriverCard({
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xs text-text-muted font-mono w-4 flex-shrink-0">#{rank}</span>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-text-primary truncate">{driver.driverUsername}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-medium text-text-primary truncate">{driver.driverUsername}</p>
+              {driver.busy && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-warning/15 text-warning whitespace-nowrap flex-shrink-0">
+                  Busy
+                </span>
+              )}
+            </div>
             <p className="text-xs text-text-muted truncate">{driver.driverEmail}</p>
           </div>
         </div>

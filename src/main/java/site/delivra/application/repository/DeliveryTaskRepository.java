@@ -25,4 +25,7 @@ public interface DeliveryTaskRepository extends JpaRepository<DeliveryTask, Inte
 
     @Query("SELECT COUNT(t) FROM DeliveryTask t WHERE t.user.id = :driverId AND t.status = :status AND t.deleted = false")
     long countPendingTasksForDriver(@Param("driverId") Integer driverId, @Param("status") DeliveryTaskStatus status);
+
+    @Query("SELECT COUNT(t) FROM DeliveryTask t WHERE t.user.id = :driverId AND t.status IN :statuses AND t.deleted = false")
+    long countActiveTasksForDriver(@Param("driverId") Integer driverId, @Param("statuses") List<DeliveryTaskStatus> statuses);
 }

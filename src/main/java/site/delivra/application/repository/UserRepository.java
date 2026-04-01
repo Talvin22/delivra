@@ -37,10 +37,6 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
             WHERE u.deleted = false
               AND u.status = 'ACTIVE'
               AND r.name = 'DRIVER'
-              AND u.id NOT IN (
-                SELECT t.user.id FROM DeliveryTask t
-                WHERE t.status = 'IN_PROGRESS' AND t.deleted = false
-              )
             """)
     List<User> findAvailableDrivers();
 }

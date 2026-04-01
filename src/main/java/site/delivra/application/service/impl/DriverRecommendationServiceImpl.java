@@ -67,14 +67,18 @@ public class DriverRecommendationServiceImpl implements DriverRecommendationServ
         return DelivraResponse.createSuccessful(result);
     }
 
+    private static final List<DeliveryTaskStatus> ACTIVE_STATUSES =
+            List.of(DeliveryTaskStatus.PENDING, DeliveryTaskStatus.IN_PROGRESS);
+
     private RawMetrics collectMetrics(User driver, DeliveryTask task) {
         Double distanceMeters = resolveDriverDistance(driver, task);
-        long pendingCount = deliveryTaskRepository.countPendingTasksForDriver(
-                driver.getId(), DeliveryTaskStatus.PENDING);
+        long activeCount = deliveryTaskRepository.countActiveTasksForDriver(driver.getId(), ACTIVE_STATUSES);
+        boolean busy = deliveryTaskRepository.countActiveTasksForDriver(
+                driver.getId(), List.of(DeliveryTaskStatus.IN_PROGRESS)) > 0;
         double successRate = computeSuccessRate(driver.getId());
         Long hoursSinceActivity = resolveHoursSinceLastActivity(driver);
 
-        return new RawMetrics(driver, distanceMeters, pendingCount, successRate, hoursSinceActivity);
+        return new RawMetrics(driver, distanceMeters, activeCount, busy, successRate, hoursSinceActivity);
     }
 
     private Double resolveDriverDistance(User driver, DeliveryTask task) {
@@ -124,15 +128,15 @@ public class DriverRecommendationServiceImpl implements DriverRecommendationServ
                 .max()
                 .orElse(1.0);
 
-        long maxPending = allMetrics.stream()
-                .mapToLong(RawMetrics::pendingCount)
+        long maxActive = allMetrics.stream()
+                .mapToLong(RawMetrics::activeCount)
                 .max()
                 .orElse(0L);
 
         List<DriverRecommendationDTO> result = new ArrayList<>();
         for (RawMetrics m : allMetrics) {
             double proximityScore = computeProximityScore(m.distanceMeters(), maxDistance);
-            double workloadScore = computeWorkloadScore(m.pendingCount(), maxPending);
+            double workloadScore = computeWorkloadScore(m.activeCount(), maxActive);
             double successRateScore = m.successRate();
             double recencyScore = computeRecencyScore(m.hoursSinceActivity());
 
@@ -145,13 +149,14 @@ public class DriverRecommendationServiceImpl implements DriverRecommendationServ
                     .driverId(m.driver().getId())
                     .driverUsername(m.driver().getUsername())
                     .driverEmail(m.driver().getEmail())
+                    .busy(m.busy())
                     .totalScore(Math.round(totalScore * 100.0) / 100.0)
                     .proximityScore(Math.round(proximityScore * 10000.0) / 100.0)
                     .workloadScore(Math.round(workloadScore * 10000.0) / 100.0)
                     .successRateScore(Math.round(successRateScore * 10000.0) / 100.0)
                     .recencyScore(Math.round(recencyScore * 10000.0) / 100.0)
                     .distanceMeters(m.distanceMeters())
-                    .pendingTasksCount(m.pendingCount())
+                    .pendingTasksCount(m.activeCount())
                     .successRate(Math.round(m.successRate() * 10000.0) / 10000.0)
                     .hoursSinceLastActivity(m.hoursSinceActivity())
                     .build());
@@ -169,11 +174,11 @@ public class DriverRecommendationServiceImpl implements DriverRecommendationServ
         return Math.max(0.0, 1.0 - (distanceMeters / maxDistance));
     }
 
-    private double computeWorkloadScore(long pendingCount, long maxPending) {
-        if (maxPending == 0) {
+    private double computeWorkloadScore(long activeCount, long maxActive) {
+        if (maxActive == 0) {
             return 1.0;
         }
-        return 1.0 - ((double) pendingCount / maxPending);
+        return 1.0 - ((double) activeCount / maxActive);
     }
 
     private double computeRecencyScore(Long hoursSinceActivity) {
@@ -186,7 +191,8 @@ public class DriverRecommendationServiceImpl implements DriverRecommendationServ
     private record RawMetrics(
             User driver,
             Double distanceMeters,
-            long pendingCount,
+            long activeCount,
+            boolean busy,
             double successRate,
             Long hoursSinceActivity) {
     }

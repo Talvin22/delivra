@@ -120,6 +120,7 @@ export interface DriverRecommendationDTO {
   driverId: number
   driverUsername: string
   driverEmail: string
+  busy: boolean
   totalScore: number
   proximityScore: number
   workloadScore: number

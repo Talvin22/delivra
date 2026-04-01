@@ -20,6 +20,8 @@ public class DriverRecommendationDTO implements Serializable {
     private double successRateScore;
     private double recencyScore;
 
+    private boolean busy;
+
     private Double distanceMeters;
     private long pendingTasksCount;
     private double successRate;
