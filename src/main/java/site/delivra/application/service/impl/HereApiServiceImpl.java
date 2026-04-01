@@ -37,6 +37,7 @@ public class HereApiServiceImpl implements HereApiService {
                 .fromHttpUrl(hereApiConfig.getGeocodingBaseUrl())
                 .queryParam("q", address)
                 .queryParam("apiKey", hereApiConfig.getApiKey())
+                .encode()
                 .build()
                 .toUri();
 
