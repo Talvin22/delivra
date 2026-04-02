@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   MapPin, ListTodo, Users, BarChart3, LogOut,
-  Navigation, Menu, X, MessageSquare,
+  Navigation, Menu, X, MessageSquare, FileDown,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useWsStore } from '@/store/wsStore'
@@ -15,15 +15,17 @@ function useNavItems(): NavItem[] {
   const role = primaryRole()
 
   if (role === 'DRIVER') return [
-    { to: '/driver', icon: <ListTodo size={20} />, label: 'Мои задачи' },
+    { to: '/driver', icon: <ListTodo size={20} />, label: 'My Tasks' },
   ]
   if (role === 'DISPATCHER') return [
-    { to: '/dispatcher', icon: <MapPin size={20} />, label: 'Карта' },
+    { to: '/dispatcher', icon: <MapPin size={20} />, label: 'Map' },
+    { to: '/dispatcher/report', icon: <FileDown size={20} />, label: 'Report' },
   ]
   return [
-    { to: '/admin', icon: <BarChart3 size={20} />, label: 'Дашборд' },
-    { to: '/admin/users', icon: <Users size={20} />, label: 'Пользователи' },
-    { to: '/admin/tasks', icon: <ListTodo size={20} />, label: 'Задачи' },
+    { to: '/admin', icon: <BarChart3 size={20} />, label: 'Dashboard' },
+    { to: '/admin/users', icon: <Users size={20} />, label: 'Users' },
+    { to: '/admin/tasks', icon: <ListTodo size={20} />, label: 'Tasks' },
+    { to: '/admin/report', icon: <FileDown size={20} />, label: 'Report' },
   ]
 }
 
@@ -98,7 +100,7 @@ export function AppLayout() {
             className="flex items-center gap-2 w-full px-3 py-2 text-sm text-text-secondary hover:text-danger hover:bg-danger/10 rounded-md transition-colors"
           >
             <LogOut size={16} />
-            Выйти
+            Sign out
           </button>
         </div>
       </aside>

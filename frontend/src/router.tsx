@@ -11,6 +11,7 @@ import { AdminDashboard } from '@/features/admin/AdminDashboard'
 import { UsersPage } from '@/features/admin/UsersPage'
 import { TasksAdminPage } from '@/features/admin/TasksAdminPage'
 import { RoleRedirect } from '@/features/auth/RoleRedirect'
+import { ReportPage } from '@/features/report/ReportPage'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { path: '/dispatcher', element: <DispatcherPage /> },
+      { path: '/dispatcher/report', element: <ReportPage /> },
     ],
   },
 
@@ -59,6 +61,7 @@ export const router = createBrowserRouter([
       { path: '/admin', element: <AdminDashboard /> },
       { path: '/admin/users', element: <UsersPage /> },
       { path: '/admin/tasks', element: <TasksAdminPage /> },
+      { path: '/admin/report', element: <ReportPage /> },
     ],
   },
 
