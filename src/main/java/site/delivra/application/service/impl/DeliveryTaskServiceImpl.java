@@ -26,6 +26,7 @@ import site.delivra.application.repository.DeliveryTaskRepository;
 import site.delivra.application.repository.UserRepository;
 import site.delivra.application.repository.criteria.DeliveryTaskSearchCriteria;
 import site.delivra.application.service.DeliveryTaskService;
+import site.delivra.application.service.EmailService;
 import site.delivra.application.service.HereApiService;
 import site.delivra.application.service.model.DelivraServiceUserRole;
 
@@ -38,6 +39,7 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
     private final UserRepository userRepository;
     private final DeliveryTaskMapper taskMapper;
     private final HereApiService hereApiService;
+    private final EmailService emailService;
 
 
     @Override
@@ -76,6 +78,11 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
         }
 
         DeliveryTask saved = deliveryTaskRepository.save(task);
+
+        if (task.getUser() != null) {
+            emailService.sendTaskAssignedNotification(saved, task.getUser());
+        }
+
         return DelivraResponse.createSuccessful(taskMapper.toDto(saved));
     }
 
@@ -86,6 +93,7 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
         taskMapper.updateDeliveryTask(updateDeliveryTaskRequest, deliveryTask);
 
+        User assignedDriver = null;
         if (updateDeliveryTaskRequest.getDriverId() != null) {
             User driver = userRepository.findByIdAndDeletedFalse(updateDeliveryTaskRequest.getDriverId())
                     .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(updateDeliveryTaskRequest.getDriverId())));
@@ -95,9 +103,19 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
                 throw new NotDriverException(ApiErrorMessage.USER_NOT_DRIVER.getMessage(driver.getId()));
             }
             deliveryTask.setUser(driver);
+            assignedDriver = driver;
         }
 
         DeliveryTask updated = deliveryTaskRepository.save(deliveryTask);
+
+        if (assignedDriver != null) {
+            emailService.sendTaskAssignedNotification(updated, assignedDriver);
+        } else if (updateDeliveryTaskRequest.getStatus() != null && deliveryTask.getUser() != null) {
+            Integer driverId = deliveryTask.getUser().getId();
+            userRepository.findByIdAndDeletedFalse(driverId)
+                    .ifPresent(driver -> emailService.sendTaskStatusChangedNotification(updated, driver));
+        }
+
         return DelivraResponse.createSuccessful(taskMapper.toDto(updated));
 
     }

@@ -19,6 +19,7 @@ import site.delivra.application.repository.ChatMessageRepository;
 import site.delivra.application.repository.DeliveryTaskRepository;
 import site.delivra.application.repository.UserRepository;
 import site.delivra.application.service.ChatService;
+import site.delivra.application.service.EmailService;
 
 @Slf4j
 @Service
@@ -28,6 +29,7 @@ public class ChatServiceImpl implements ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final DeliveryTaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -45,6 +47,11 @@ public class ChatServiceImpl implements ChatService {
 
         ChatMessage saved = chatMessageRepository.save(message);
         log.debug("Chat message saved: id={}, taskId={}, senderId={}", saved.getId(), taskId, senderId);
+
+        if (task.getUser() != null) {
+            task.getUser().getEmail(); // force-init lazy proxy within transaction
+        }
+        emailService.sendChatNotification(task, sender, request.getMessageText());
 
         return toDto(saved);
     }
