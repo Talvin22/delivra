@@ -18,7 +18,7 @@ public class ReportController {
     private final ReportService reportService;
 
     @GetMapping("/reports/export/excel")
-    @PreAuthorize("hasAnyRole('DISPATCHER', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('DISPATCHER', 'ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<byte[]> exportExcel() {
         byte[] bytes = reportService.generateLast30DaysReport();
         String filename = "delivra-report-" + LocalDate.now() + ".xlsx";
