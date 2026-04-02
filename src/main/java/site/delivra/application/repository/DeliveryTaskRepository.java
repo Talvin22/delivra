@@ -2,6 +2,7 @@ package site.delivra.application.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import site.delivra.application.model.entities.DeliveryTask;
 import site.delivra.application.model.enums.DeliveryTaskStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,4 +30,6 @@ public interface DeliveryTaskRepository extends JpaRepository<DeliveryTask, Inte
 
     @Query("SELECT COUNT(t) FROM DeliveryTask t WHERE t.user.id = :driverId AND t.status IN :statuses AND t.deleted = false")
     long countActiveTasksForDriver(@Param("driverId") Integer driverId, @Param("statuses") List<DeliveryTaskStatus> statuses);
+
+    List<DeliveryTask> findAllByDeletedFalseAndCreatedAfter(LocalDateTime since, Sort sort);
 }
