@@ -5,6 +5,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import site.delivra.application.model.entities.DeliveryTask;
 import site.delivra.application.model.enums.DeliveryTaskStatus;
 import site.delivra.application.repository.DeliveryTaskRepository;
@@ -12,7 +13,6 @@ import site.delivra.application.service.ReportService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -28,6 +28,7 @@ public class ReportServiceImpl implements ReportService {
     private final DeliveryTaskRepository taskRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public byte[] generateLast30DaysReport() {
         LocalDateTime since = LocalDateTime.now().minusDays(30);
         List<DeliveryTask> tasks = taskRepository.findAllByDeletedFalseAndCreatedAfter(
