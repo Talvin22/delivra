@@ -11,10 +11,11 @@ export default defineConfig({
     port: 5173,
     host: true,
     proxy: {
-      '/auth':  { target: 'http://localhost:8189', changeOrigin: true },
-      '/users': { target: 'http://localhost:8189', changeOrigin: true },
-      '/tasks': { target: 'http://localhost:8189', changeOrigin: true },
-      '/ws':    { target: 'ws://localhost:8189',   changeOrigin: true, ws: true },
+      '/auth':    { target: 'http://localhost:8189', changeOrigin: true },
+      '/users':   { target: 'http://localhost:8189', changeOrigin: true },
+      '/tasks':   { target: 'http://localhost:8189', changeOrigin: true },
+      '/reports': { target: 'http://localhost:8189', changeOrigin: true },
+      '/ws':      { target: 'ws://localhost:8189',   changeOrigin: true, ws: true },
     },
   },
   build: {
