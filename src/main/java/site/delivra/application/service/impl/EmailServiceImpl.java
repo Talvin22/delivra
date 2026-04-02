@@ -1,6 +1,7 @@
 package site.delivra.application.service.impl;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import site.delivra.application.model.entities.User;
 import site.delivra.application.repository.UserRepository;
 import site.delivra.application.service.EmailService;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Optional;
 
 @Slf4j
@@ -27,8 +29,11 @@ public class EmailServiceImpl implements EmailService {
     @Value("${app.mail.enabled:false}")
     private boolean mailEnabled;
 
-    @Value("${app.mail.from:noreply@delivra.app}")
-    private String mailFrom;
+    @Value("${app.mail.from.address:${spring.mail.username:}}")
+    private String mailFromAddress;
+
+    @Value("${app.mail.from.name:Delivra Notifications}")
+    private String mailFromName;
 
     @Async
     @Override
@@ -122,7 +127,7 @@ public class EmailServiceImpl implements EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
-            helper.setFrom(mailFrom);
+            helper.setFrom(new InternetAddress(mailFromAddress, mailFromName));
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlBody, true);
@@ -130,6 +135,8 @@ public class EmailServiceImpl implements EmailService {
             log.debug("Email sent to {}: {}", to, subject);
         } catch (MessagingException e) {
             log.error("Failed to send email to {}: {}", to, e.getMessage(), e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
     }
 }
