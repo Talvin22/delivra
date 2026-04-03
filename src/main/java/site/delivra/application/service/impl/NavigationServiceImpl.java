@@ -83,6 +83,9 @@ public class NavigationServiceImpl implements NavigationService {
         }
 
         task.setStatus(DeliveryTaskStatus.IN_PROGRESS);
+        if (task.getStartTime() == null) {
+            task.setStartTime(LocalDateTime.now());
+        }
         taskRepository.save(task);
 
         NavigationSession session = new NavigationSession();
