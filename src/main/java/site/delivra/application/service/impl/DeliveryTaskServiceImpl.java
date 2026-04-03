@@ -21,6 +21,9 @@ import site.delivra.application.model.request.task.SearchDeliveryTaskRequest;
 import site.delivra.application.model.request.task.UpdateDeliveryTaskRequest;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.model.response.PaginationResponse;
+import site.delivra.application.model.enums.DeliveryTaskStatus;
+
+import java.time.LocalDateTime;
 import site.delivra.application.model.entities.User;
 import site.delivra.application.repository.DeliveryTaskRepository;
 import site.delivra.application.repository.UserRepository;
@@ -92,6 +95,18 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage(deliveryTaskId)));
 
         taskMapper.updateDeliveryTask(updateDeliveryTaskRequest, deliveryTask);
+
+        if (updateDeliveryTaskRequest.getStatus() != null) {
+            if (updateDeliveryTaskRequest.getStatus() == DeliveryTaskStatus.IN_PROGRESS
+                    && deliveryTask.getStartTime() == null) {
+                deliveryTask.setStartTime(LocalDateTime.now());
+            }
+            if ((updateDeliveryTaskRequest.getStatus() == DeliveryTaskStatus.COMPLETED
+                    || updateDeliveryTaskRequest.getStatus() == DeliveryTaskStatus.CANCELED)
+                    && deliveryTask.getEndTime() == null) {
+                deliveryTask.setEndTime(LocalDateTime.now());
+            }
+        }
 
         User assignedDriver = null;
         if (updateDeliveryTaskRequest.getDriverId() != null) {
