@@ -15,7 +15,7 @@ export interface GpsState {
 export function useGps(active: boolean, onPosition?: (lat: number, lng: number, heading: number, accuracy: number) => void) {
   const [gps, setGps] = useState<GpsState>({
     lat: null, lng: null, heading: 0, speed: 0,
-    status: 'off', statusText: 'GPS не определён',
+    status: 'off', statusText: 'GPS off',
   })
 
   const watchId = useRef<number | null>(null)
@@ -24,16 +24,16 @@ export function useGps(active: boolean, onPosition?: (lat: number, lng: number, 
 
   const stop = useCallback(() => {
     if (watchId.current !== null) { navigator.geolocation.clearWatch(watchId.current); watchId.current = null }
-    setGps(g => ({ ...g, status: 'off', statusText: 'GPS не определён' }))
+    setGps(g => ({ ...g, status: 'off', statusText: 'GPS off' }))
   }, [])
 
   useEffect(() => {
     if (!active) { stop(); return }
     if (!navigator.geolocation) {
-      setGps(g => ({ ...g, status: 'error', statusText: 'GPS не поддерживается' }))
+      setGps(g => ({ ...g, status: 'error', statusText: 'GPS not supported' }))
       return
     }
-    setGps(g => ({ ...g, status: 'searching', statusText: 'Определяю позицию...' }))
+    setGps(g => ({ ...g, status: 'searching', statusText: 'Locating...' }))
 
     watchId.current = navigator.geolocation.watchPosition(
       pos => {
@@ -62,8 +62,8 @@ export function useGps(active: boolean, onPosition?: (lat: number, lng: number, 
         onPosition?.(lat, lng, newHeading, accuracy ?? 999)
       },
       err => {
-        if (err.code === 1) setGps(g => ({ ...g, status: 'error', statusText: 'Доступ к GPS запрещён' }))
-        else if (err.code === 2) setGps(g => ({ ...g, status: 'error', statusText: 'GPS недоступен' }))
+        if (err.code === 1) setGps(g => ({ ...g, status: 'error', statusText: 'GPS access denied' }))
+        else if (err.code === 2) setGps(g => ({ ...g, status: 'error', statusText: 'GPS unavailable' }))
         // code 3 = timeout, ignore — watchPosition will retry
       },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 },

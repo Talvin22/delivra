@@ -32,7 +32,7 @@ export function LoginPage() {
       else navigate('/admin')
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(msg ?? 'Неверный логин или пароль')
+      setError(msg ?? 'Invalid email or password')
     }
   }
 
@@ -41,7 +41,7 @@ export function LoginPage() {
       <div className="w-full max-w-sm bg-bg-surface border-2 border-brand/30 rounded-xl p-8 shadow-2xl shadow-brand/10">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-brand tracking-wide">⬡ Delivra</h1>
-          <p className="text-text-secondary text-sm mt-1">Войдите в систему</p>
+          <p className="text-text-secondary text-sm mt-1">Sign in to your account</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -55,7 +55,7 @@ export function LoginPage() {
           />
           <Input
             id="password"
-            label="Пароль"
+            label="Password"
             type="password"
             placeholder="••••••••"
             autoComplete="current-password"
@@ -65,7 +65,7 @@ export function LoginPage() {
           {error && <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-md px-3 py-2">{error}</p>}
 
           <Button type="submit" size="lg" loading={isSubmitting} className="mt-2">
-            Войти
+            Sign in
           </Button>
         </form>
       </div>
