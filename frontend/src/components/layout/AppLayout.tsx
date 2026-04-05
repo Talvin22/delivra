@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   MapPin, ListTodo, Users, BarChart3, LogOut,
-  Navigation, Menu, X, MessageSquare, FileDown,
+  Navigation, Menu, X, MessageSquare, FileDown, Sun, Moon,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useWsStore } from '@/store/wsStore'
+import { useThemeStore } from '@/store/themeStore'
 import { cn } from '@/lib/utils'
 
 interface NavItem { to: string; icon: React.ReactNode; label: string }
@@ -37,6 +38,7 @@ export function AppLayout() {
   const connected = useWsStore(s => s.connected)
   const navItems = useNavItems()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { dark, toggle: toggleTheme } = useThemeStore()
 
   const handleLogout = () => {
     disconnect()
@@ -94,6 +96,16 @@ export function AppLayout() {
           <div className="flex items-center gap-2 px-2 py-1.5 mb-1">
             <span className={cn('w-2 h-2 rounded-full flex-shrink-0', connected ? 'bg-success' : 'bg-bg-muted')} />
             <span className="text-xs text-text-secondary truncate">{user?.username ?? user?.email}</span>
+          </div>
+          <div className="flex gap-1 mb-1">
+            <button
+              onClick={toggleTheme}
+              className="flex items-center gap-2 flex-1 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-raised rounded-md transition-colors"
+              title={dark ? 'Switch to light theme' : 'Switch to dark theme'}
+            >
+              {dark ? <Sun size={16} /> : <Moon size={16} />}
+              {dark ? 'Light mode' : 'Dark mode'}
+            </button>
           </div>
           <button
             onClick={handleLogout}

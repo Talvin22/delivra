@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Theme tokens (space-separated RGB channels for Tailwind opacity modifiers) ── */
+
+:root {
+  /* Light theme */
+  --bg-base:    241 245 249;   /* slate-100  #f1f5f9 */
+  --bg-surface: 255 255 255;   /* white      #ffffff */
+  --bg-raised:  248 250 252;   /* slate-50   #f8fafc */
+  --bg-border:  226 232 240;   /* slate-200  #e2e8f0 */
+  --bg-muted:   148 163 184;   /* slate-400  #94a3b8 */
+  --text-primary:   15  23  42; /* slate-900  #0f172a */
+  --text-secondary: 71  85 105; /* slate-600  #475569 */
+  --text-muted:    148 163 184; /* slate-400  #94a3b8 */
+}
+
+html.dark {
+  --bg-base:    15  17  23;    /* #0f1117 */
+  --bg-surface: 26  29  46;    /* #1a1d2e */
+  --bg-raised:  30  34  53;    /* #1e2235 */
+  --bg-border:  45  49  72;    /* #2d3148 */
+  --bg-muted:   74  79 106;    /* #4a4f6a */
+  --text-primary:   226 232 240; /* #e2e8f0 */
+  --text-secondary: 136 146 176; /* #8892b0 */
+  --text-muted:      74  79 106; /* #4a4f6a */
+}
+
+/* ─── Base ───────────────────────────────────────────────────────── */
+
 html, body, #root {
   height: 100%;
   margin: 0;
@@ -9,8 +36,8 @@ html, body, #root {
 }
 
 body {
-  background-color: #0f1117;
-  color: #e2e8f0;
+  background-color: rgb(var(--bg-base));
+  color: rgb(var(--text-primary));
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
@@ -19,26 +46,30 @@ body {
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2d3148; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgb(var(--bg-border)); border-radius: 2px; }
 
-/* Leaflet dark theme */
-.leaflet-container { background: #0f1117; }
+/* ─── Leaflet theme-aware overrides ─────────────────────────────── */
+
+.leaflet-container { background: rgb(var(--bg-base)); }
+
 .leaflet-control-zoom a {
-  background: #1a1d2e !important;
-  color: #e2e8f0 !important;
-  border-color: #2d3148 !important;
+  background: rgb(var(--bg-surface)) !important;
+  color: rgb(var(--text-primary)) !important;
+  border-color: rgb(var(--bg-border)) !important;
 }
-.leaflet-control-zoom a:hover { background: #2d3148 !important; }
-.leaflet-popup-content-wrapper {
-  background: #1a1d2e;
-  color: #e2e8f0;
-  border: 1px solid #2d3148;
-  border-radius: 10px;
-}
-.leaflet-popup-tip { background: #1a1d2e; }
-.leaflet-bar { border: 1px solid #2d3148 !important; }
+.leaflet-control-zoom a:hover { background: rgb(var(--bg-raised)) !important; }
 
-/* Driver arrow */
+.leaflet-popup-content-wrapper {
+  background: rgb(var(--bg-surface));
+  color: rgb(var(--text-primary));
+  border: 1px solid rgb(var(--bg-border));
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.leaflet-popup-tip { background: rgb(var(--bg-surface)); }
+.leaflet-bar { border: 1px solid rgb(var(--bg-border)) !important; }
+
+/* Navigation arrow */
 .nav-arrow {
   transition: transform 0.3s ease-out;
   filter: drop-shadow(0 2px 6px rgba(108,138,255,0.6));

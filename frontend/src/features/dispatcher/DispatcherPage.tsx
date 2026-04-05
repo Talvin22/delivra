@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import { Plus, MessageSquare, ChevronLeft, RefreshCw, UserPlus } from 'lucide-react'
+import { Plus, MessageSquare, ChevronLeft, RefreshCw, UserPlus, MapPin as MapPinIcon, Pencil } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 import { tasksApi } from '@/api/tasks'
 import { usersApi } from '@/api/users'
 import { useWsStore } from '@/store/wsStore'
+import { useThemeStore } from '@/store/themeStore'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { ChatPanel } from '@/components/chat/ChatPanel'
@@ -16,6 +17,30 @@ import { DriverRecommendationModal } from './DriverRecommendationModal'
 import { formatDateTime, TASK_STATUS_LABEL } from '@/lib/formatters'
 import type { DeliveryTaskDTO, DeliveryTaskStatus, NavigationEventDTO, DriverPosition } from '@/types/api'
 import { cn } from '@/lib/utils'
+
+// Flies to position once on first load (initial geolocation)
+function FlyToLocation({ center }: { center: [number, number] | null }) {
+  const map = useMap()
+  const done = useRef(false)
+  useEffect(() => {
+    if (!center || done.current) return
+    done.current = true
+    map.flyTo(center, 13, { animate: true, duration: 1.2 })
+  }, [map, center])
+  return null
+}
+
+// Flies to position whenever `target` changes (task focus)
+function FlyToTarget({ target }: { target: { pos: [number, number]; zoom: number; seq: number } | null }) {
+  const map = useMap()
+  const prevSeq = useRef(-1)
+  useEffect(() => {
+    if (!target || target.seq === prevSeq.current) return
+    prevSeq.current = target.seq
+    map.flyTo(target.pos, target.zoom, { animate: true, duration: 0.8 })
+  }, [map, target])
+  return null
+}
 
 const STATUS_BADGE: Record<DeliveryTaskStatus, 'brand'|'warning'|'success'|'danger'> = {
   IN_PROGRESS: 'brand', PENDING: 'warning', COMPLETED: 'success', CANCELED: 'danger',
@@ -45,7 +70,11 @@ function makeDestIcon() {
 export function DispatcherPage() {
   const qc = useQueryClient()
   const { subscribe } = useWsStore()
+  const dark = useThemeStore(s => s.dark)
 
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+  const [flyTarget, setFlyTarget] = useState<{ pos: [number, number]; zoom: number; seq: number } | null>(null)
+  const flySeq = useRef(0)
   const [driverPositions, setDriverPositions] = useState<Map<number, DriverPosition>>(new Map())
   const [chatTaskId, setChatTaskId] = useState<number | null>(null)
   const [taskFormOpen, setTaskFormOpen] = useState(false)
@@ -53,6 +82,15 @@ export function DispatcherPage() {
   const [editTask, setEditTask] = useState<DeliveryTaskDTO | null>(null)
   const [filterStatus, setFilterStatus] = useState<DeliveryTaskStatus | 'ALL'>('ALL')
   const [panelOpen, setPanelOpen] = useState(true)
+
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      pos => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+      () => { /* ignore — map stays on default center */ },
+      { enableHighAccuracy: false, timeout: 10000 },
+    )
+  }, [])
 
   const { data: tasks, isLoading, refetch } = useQuery({
     queryKey: ['dispatcher-tasks'],
@@ -106,6 +144,18 @@ export function DispatcherPage() {
     qc.invalidateQueries({ queryKey: ['dispatcher-tasks'] })
   }, [qc])
 
+  const handleFocusTask = useCallback((task: DeliveryTaskDTO) => {
+    const dp = driverPositions.get(task.id)
+    const pos: [number, number] | null = dp
+      ? [dp.lat, dp.lng]
+      : task.latitude && task.longitude
+        ? [task.latitude, task.longitude]
+        : null
+    if (!pos) return
+    setFlyTarget({ pos, zoom: dp ? 15 : 13, seq: ++flySeq.current })
+    setPanelOpen(false)
+  }, [driverPositions])
+
   const filtered = (tasks ?? []).filter(t => filterStatus === 'ALL' || t.status === filterStatus)
   const STATUSES: (DeliveryTaskStatus | 'ALL')[] = ['ALL', 'IN_PROGRESS', 'PENDING', 'COMPLETED', 'CANCELED']
 
@@ -122,10 +172,16 @@ export function DispatcherPage() {
           zoomControl={false}
         >
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            key={dark ? 'dark' : 'light'}
+            url={dark
+              ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+              : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+            }
             attribution="&copy; OpenStreetMap &copy; CARTO"
             maxZoom={19}
           />
+          <FlyToLocation center={userLocation} />
+          <FlyToTarget target={flyTarget} />
 
           {Array.from(driverPositions.values()).map(dp => (
             <Marker key={dp.taskId} position={[dp.lat, dp.lng]} icon={makeDriverMapIcon(`#${dp.taskId}`)}>
@@ -218,6 +274,7 @@ export function DispatcherPage() {
                   onEdit={() => setEditTask(task)}
                   onChat={() => setChatTaskId(task.id)}
                   onRecommend={() => setRecommendTaskId(task.id)}
+                  onFocus={() => handleFocusTask(task)}
                 />
               ))
             )}
@@ -264,18 +321,21 @@ export function DispatcherPage() {
 }
 
 function TaskRow({
-  task, hasDriver, onEdit, onChat, onRecommend,
+  task, hasDriver, onEdit, onChat, onRecommend, onFocus,
 }: {
   task: DeliveryTaskDTO
   hasDriver: boolean
   onEdit: () => void
   onChat: () => void
   onRecommend: () => void
+  onFocus: () => void
 }) {
+  const canFocus = hasDriver || !!(task.latitude && task.longitude)
+
   return (
     <div
       className="border-b border-bg-border hover:bg-bg-raised transition-colors cursor-pointer"
-      onClick={onEdit}
+      onClick={canFocus ? onFocus : onEdit}
     >
       <div className="flex items-start gap-2 p-3">
         <div className="flex-1 min-w-0">
@@ -299,9 +359,26 @@ function TaskRow({
           )}
           <button
             onClick={onChat}
+            title="Chat"
             className="p-1.5 rounded text-text-muted hover:text-brand hover:bg-brand/10 transition-colors"
           >
             <MessageSquare size={14} />
+          </button>
+          {canFocus && (
+            <button
+              onClick={e => { e.stopPropagation(); onFocus() }}
+              title="Show on map"
+              className="p-1.5 rounded text-text-muted hover:text-brand hover:bg-brand/10 transition-colors"
+            >
+              <MapPinIcon size={14} />
+            </button>
+          )}
+          <button
+            onClick={e => { e.stopPropagation(); onEdit() }}
+            title="Edit"
+            className="p-1.5 rounded text-text-muted hover:text-text-primary hover:bg-bg-raised transition-colors"
+          >
+            <Pencil size={14} />
           </button>
         </div>
       </div>

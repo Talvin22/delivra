@@ -9,6 +9,7 @@ import { X, Crosshair, MessageSquare, CheckCircle } from 'lucide-react'
 import { navigationApi } from '@/api/navigation'
 import { tasksApi } from '@/api/tasks'
 import { useWsStore } from '@/store/wsStore'
+import { useThemeStore } from '@/store/themeStore'
 import { useGps } from '@/hooks/useGps'
 import { useWakeLock } from '@/hooks/useWakeLock'
 import { calcRemainingDist, closestWaypointIdx } from '@/lib/geo'
@@ -183,6 +184,7 @@ export function NavigationPage() {
   const lastCommittedPos = useRef<[number, number] | null>(null)
 
   useWakeLock(!ended)
+  const dark = useThemeStore(s => s.dark)
 
   // Memoize icon — recreating on every render causes Leaflet to re-render the marker (jerkiness)
   const driverIcon = useMemo(() => makeDriverIcon(), [])
@@ -345,7 +347,11 @@ export function NavigationPage() {
         rotate={true}
       >
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          key={dark ? 'dark' : 'light'}
+          url={dark
+            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+            : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+          }
           attribution="&copy; OpenStreetMap &copy; CARTO"
           maxZoom={19}
         />

@@ -1,5 +1,5 @@
 import { api } from './axios'
-import type { DelivraResponse, NavigationSessionDTO } from '@/types/api'
+import type { DelivraResponse, NavigationSessionDTO, RouteDTO } from '@/types/api'
 
 export const navigationApi = {
   start: (taskId: number, body: {
@@ -15,4 +15,5 @@ export const navigationApi = {
 
   getActive: (taskId: number) =>
     api.get<DelivraResponse<NavigationSessionDTO>>(`/tasks/${taskId}/navigation/active`),
+
 }

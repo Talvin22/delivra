@@ -3,9 +3,9 @@ import { createRoot } from 'react-dom/client'
 import 'leaflet/dist/leaflet.css'
 import './index.css'
 import App from './App.tsx'
+import { initTheme } from './store/themeStore'
 
-// Enable dark mode for Tailwind
-document.documentElement.classList.add('dark')
+initTheme()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

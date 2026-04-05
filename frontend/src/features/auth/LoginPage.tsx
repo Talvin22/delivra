@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { authApi } from '@/api/auth'
 import { useAuthStore } from '@/store/authStore'
@@ -68,6 +68,13 @@ export function LoginPage() {
             Sign in
           </Button>
         </form>
+
+        <p className="text-center text-sm text-text-muted mt-6">
+          No account?{' '}
+          <Link to="/register" className="text-brand hover:underline">
+            Register your company
+          </Link>
+        </p>
       </div>
     </div>
   )

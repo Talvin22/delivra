@@ -6,19 +6,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Design tokens — тёмная тема Delivra
+        // CSS-variable tokens — work for both dark and light themes.
+        // Format: rgb(var(--name) / <alpha-value>) enables opacity modifiers like bg-bg-base/50
         bg: {
-          base:    '#0f1117',
-          surface: '#1a1d2e',
-          raised:  '#1e2235',
-          border:  '#2d3148',
-          muted:   '#4a4f6a',
+          base:    'rgb(var(--bg-base)    / <alpha-value>)',
+          surface: 'rgb(var(--bg-surface) / <alpha-value>)',
+          raised:  'rgb(var(--bg-raised)  / <alpha-value>)',
+          border:  'rgb(var(--bg-border)  / <alpha-value>)',
+          muted:   'rgb(var(--bg-muted)   / <alpha-value>)',
         },
         text: {
-          primary:   '#e2e8f0',
-          secondary: '#8892b0',
-          muted:     '#4a4f6a',
+          primary:   'rgb(var(--text-primary)   / <alpha-value>)',
+          secondary: 'rgb(var(--text-secondary) / <alpha-value>)',
+          muted:     'rgb(var(--text-muted)     / <alpha-value>)',
         },
+        // Brand / status colors stay fixed — same in both themes
         brand: {
           DEFAULT: '#6c8aff',
           hover:   '#5a78f0',
