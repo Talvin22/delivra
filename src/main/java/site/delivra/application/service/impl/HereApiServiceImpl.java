@@ -83,7 +83,6 @@ public class HereApiServiceImpl implements HereApiService {
                 .queryParam("origin", originLat + "," + originLng)
                 .queryParam("destination", destLat + "," + destLng)
                 .queryParam("return", "polyline,summary,actions,instructions")
-                .queryParam("departureTime", "now")
                 .queryParam("truck[grossWeight]", effectiveWeight)
                 .queryParam("truck[height]", effectiveHeight)
                 .queryParam("truck[width]", effectiveWidth)
