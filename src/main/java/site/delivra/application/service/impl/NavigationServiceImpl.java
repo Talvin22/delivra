@@ -22,6 +22,7 @@ import site.delivra.application.repository.DeliveryTaskRepository;
 import site.delivra.application.repository.NavigationSessionRepository;
 import site.delivra.application.service.HereApiService;
 import site.delivra.application.service.NavigationService;
+import site.delivra.application.utils.ApiUtils;
 import site.delivra.application.utils.FlexiblePolylineDecoder;
 import site.delivra.application.utils.GeoUtils;
 
@@ -38,6 +39,7 @@ public class NavigationServiceImpl implements NavigationService {
     private final NavigationSessionRepository sessionRepository;
     private final DeliveryTaskRepository taskRepository;
     private final HereApiService hereApiService;
+    private final ApiUtils apiUtils;
 
     @Value("${navigation.off-route-threshold-meters:200}")
     private double offRouteThresholdMeters;
@@ -52,6 +54,11 @@ public class NavigationServiceImpl implements NavigationService {
     public DelivraResponse<NavigationSessionDTO> startNavigation(Integer taskId, StartNavigationRequest request) {
         DeliveryTask task = taskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage(taskId)));
+
+        Integer currentUserId = apiUtils.getUserIdFromAuthentication();
+        if (task.getUser() == null || !task.getUser().getId().equals(currentUserId)) {
+            throw new InvalidDataException(ApiErrorMessage.HAVE_NO_ACCESS.getMessage());
+        }
 
         if (sessionRepository.existsByDeliveryTaskIdAndStatus(taskId, NavigationSessionStatus.ACTIVE)) {
             throw new InvalidDataException(ApiErrorMessage.NAVIGATION_SESSION_ALREADY_ACTIVE.getMessage(taskId));
@@ -109,6 +116,12 @@ public class NavigationServiceImpl implements NavigationService {
                 .orElseThrow(() -> new NotFoundException(
                         ApiErrorMessage.NAVIGATION_SESSION_NOT_FOUND.getMessage(taskId)));
 
+        Integer currentUserId = apiUtils.getUserIdFromAuthentication();
+        if (session.getDeliveryTask().getUser() == null
+                || !session.getDeliveryTask().getUser().getId().equals(currentUserId)) {
+            throw new InvalidDataException(ApiErrorMessage.HAVE_NO_ACCESS.getMessage());
+        }
+
         session.setStatus(NavigationSessionStatus.COMPLETED);
         session.setEndedAt(LocalDateTime.now());
         sessionRepository.save(session);
@@ -124,6 +137,12 @@ public class NavigationServiceImpl implements NavigationService {
                 .findByDeliveryTaskIdAndStatus(taskId, NavigationSessionStatus.ACTIVE)
                 .orElseThrow(() -> new NotFoundException(
                         ApiErrorMessage.NAVIGATION_SESSION_NOT_FOUND.getMessage(taskId)));
+
+        Integer currentUserId = apiUtils.getUserIdFromAuthentication();
+        if (session.getDeliveryTask().getUser() == null
+                || !session.getDeliveryTask().getUser().getId().equals(currentUserId)) {
+            throw new InvalidDataException(ApiErrorMessage.HAVE_NO_ACCESS.getMessage());
+        }
 
         RouteDTO route = null;
         if (session.getEncodedPolyline() != null) {

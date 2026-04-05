@@ -1,7 +1,11 @@
 package site.delivra.application.security;
 
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.NonNull;
@@ -91,16 +95,11 @@ public class JwtTokenProvider {
     }
 
     private Claims getAllClaimsFromToken(String token) {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(secretKey)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (ExpiredJwtException e) {
-            return e.getClaims();
-        }
-
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     public SecretKey getKey(String secretKey64){
