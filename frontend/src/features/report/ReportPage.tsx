@@ -1,16 +1,27 @@
 import { useState } from 'react'
-import { FileDown, FileSpreadsheet, CheckCircle, Clock, Users, ListTodo } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { FileDown, FileSpreadsheet, CheckCircle, Clock, Users, ListTodo, Building2 } from 'lucide-react'
 import { reportsApi } from '@/api/reports'
+import { companiesApi } from '@/api/companies'
+import { useAuthStore } from '@/store/authStore'
 
 export function ReportPage() {
+  const isSuperAdmin = useAuthStore(s => s.hasRole('SUPER_ADMIN'))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | undefined>(undefined)
+
+  const { data: companies } = useQuery({
+    queryKey: ['all-companies'],
+    queryFn: () => companiesApi.getAllCompanies().then(r => r.data.payload),
+    enabled: isSuperAdmin,
+  })
 
   const handleDownload = async () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await reportsApi.downloadExcel()
+      const res = await reportsApi.downloadExcel(isSuperAdmin ? selectedCompanyId : undefined)
       const blob = new Blob([res.data], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       })
@@ -34,6 +45,28 @@ export function ReportPage() {
       <h1 className="text-xl font-semibold text-text-primary mb-1">Export Report</h1>
       <p className="text-sm text-text-secondary mb-6">Download task statistics for the last 30 days as an Excel file.</p>
 
+      {isSuperAdmin && (
+        <div className="bg-bg-surface border border-bg-border rounded-lg p-4 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Building2 size={15} className="text-brand" />
+            <span className="text-sm font-medium text-text-primary">Company filter</span>
+          </div>
+          <select
+            value={selectedCompanyId ?? ''}
+            onChange={e => setSelectedCompanyId(e.target.value ? Number(e.target.value) : undefined)}
+            className="w-full text-sm bg-bg-raised border border-bg-border rounded-md px-3 py-2 text-text-primary outline-none focus:border-brand"
+          >
+            <option value="">All companies</option>
+            {(companies ?? []).map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <p className="text-xs text-text-muted mt-1.5">
+            {selectedCompanyId ? 'Report for selected company only' : 'Report includes all companies with a "Company" column'}
+          </p>
+        </div>
+      )}
+
       <div className="bg-bg-surface border border-bg-border rounded-lg mb-6">
         <div className="px-4 py-3 border-b border-bg-border">
           <div className="flex items-center gap-2">
@@ -45,7 +78,9 @@ export function ReportPage() {
           <SheetRow
             icon={<ListTodo size={16} className="text-brand" />}
             title="Tasks"
-            description="Full list of tasks: address, status, driver, created by, timestamps"
+            description={isSuperAdmin && !selectedCompanyId
+              ? "Full list of tasks with Company column: address, status, driver, created by, timestamps"
+              : "Full list of tasks: address, status, driver, created by, timestamps"}
           />
           <SheetRow
             icon={<CheckCircle size={16} className="text-success" />}

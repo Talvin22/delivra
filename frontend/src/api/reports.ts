@@ -1,6 +1,9 @@
 import { api } from './axios'
 
 export const reportsApi = {
-  downloadExcel: () =>
-    api.get('/reports/export/excel', { responseType: 'arraybuffer' }),
+  downloadExcel: (companyId?: number) =>
+    api.get('/reports/export/excel', {
+      responseType: 'arraybuffer',
+      params: companyId != null ? { companyId } : undefined,
+    }),
 }

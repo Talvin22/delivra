@@ -29,17 +29,20 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     @Transactional(readOnly = true)
-    public byte[] generateLast30DaysReport() {
+    public byte[] generateLast30DaysReport(Integer companyId) {
         LocalDateTime since = LocalDateTime.now().minusDays(30);
-        List<DeliveryTask> tasks = taskRepository.findAllByDeletedFalseAndCreatedAfter(
-                since, Sort.by("created").descending());
+        List<DeliveryTask> tasks = companyId != null
+                ? taskRepository.findAllByDeletedFalseAndCompany_IdAndCreatedAfter(companyId, since, Sort.by("created").descending())
+                : taskRepository.findAllByDeletedFalseAndCreatedAfter(since, Sort.by("created").descending());
+
+        boolean includeCompanyColumn = companyId == null;
 
         try (XSSFWorkbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
             CellStyle headerStyle = buildHeaderStyle(workbook);
 
-            buildTasksSheet(workbook, headerStyle, tasks);
+            buildTasksSheet(workbook, headerStyle, tasks, includeCompanyColumn);
             buildSummarySheet(workbook, headerStyle, tasks, since);
             buildDriverActivitySheet(workbook, headerStyle, tasks);
 
@@ -50,24 +53,30 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
-    private void buildTasksSheet(XSSFWorkbook workbook, CellStyle headerStyle, List<DeliveryTask> tasks) {
+    private void buildTasksSheet(XSSFWorkbook workbook, CellStyle headerStyle, List<DeliveryTask> tasks, boolean includeCompany) {
         Sheet sheet = workbook.createSheet("Tasks");
-        String[] headers = {"#", "ID", "Address", "Status", "Driver", "Created By", "Created", "Updated", "Start Time", "End Time"};
+        String[] headers = includeCompany
+                ? new String[]{"#", "ID", "Company", "Address", "Status", "Driver", "Created By", "Created", "Updated", "Start Time", "End Time"}
+                : new String[]{"#", "ID", "Address", "Status", "Driver", "Created By", "Created", "Updated", "Start Time", "End Time"};
         createHeaderRow(sheet, headerStyle, headers);
 
         int rowIdx = 1;
         for (DeliveryTask t : tasks) {
             Row row = sheet.createRow(rowIdx++);
-            row.createCell(0).setCellValue(rowIdx - 1);
-            row.createCell(1).setCellValue(t.getId());
-            row.createCell(2).setCellValue(t.getAddress());
-            row.createCell(3).setCellValue(t.getStatus().name());
-            row.createCell(4).setCellValue(t.getUser() != null ? t.getUser().getUsername() : UNASSIGNED);
-            row.createCell(5).setCellValue(t.getCreatedBy());
-            row.createCell(6).setCellValue(fmt(t.getCreated()));
-            row.createCell(7).setCellValue(fmt(t.getUpdated()));
-            row.createCell(8).setCellValue(fmt(t.getStartTime()));
-            row.createCell(9).setCellValue(fmt(t.getEndTime()));
+            int col = 0;
+            row.createCell(col++).setCellValue(rowIdx - 1);
+            row.createCell(col++).setCellValue(t.getId());
+            if (includeCompany) {
+                row.createCell(col++).setCellValue(t.getCompany() != null ? t.getCompany().getName() : "");
+            }
+            row.createCell(col++).setCellValue(t.getAddress());
+            row.createCell(col++).setCellValue(t.getStatus().name());
+            row.createCell(col++).setCellValue(t.getUser() != null ? t.getUser().getUsername() : UNASSIGNED);
+            row.createCell(col++).setCellValue(t.getCreatedBy());
+            row.createCell(col++).setCellValue(fmt(t.getCreated()));
+            row.createCell(col++).setCellValue(fmt(t.getUpdated()));
+            row.createCell(col++).setCellValue(fmt(t.getStartTime()));
+            row.createCell(col).setCellValue(fmt(t.getEndTime()));
         }
 
         autoSizeColumns(sheet, headers.length);
