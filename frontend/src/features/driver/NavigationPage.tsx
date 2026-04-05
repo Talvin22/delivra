@@ -177,6 +177,7 @@ export function NavigationPage() {
   const [remainingM, setRemainingM] = useState<number | null>(null)
   const [remainingSec, setRemainingSec] = useState<number | null>(null)
   const [instrIdx, setInstrIdx] = useState(0)
+  const [distToTurn, setDistToTurn] = useState<number | null>(null)
   const [chatOpen, setChatOpen] = useState(false)
   const [ended, setEnded] = useState(false)
   const routeFetchedRef  = useRef(false)
@@ -242,17 +243,20 @@ export function NavigationPage() {
       setRemainingSec(Math.round(totalSec * (rem / totalDist)))
     }
 
-    // Find current instruction index
+    // Find current instruction and distance to next maneuver
     const instructions = route.instructions
     if (instructions?.length > 0 && totalDist > 0) {
       const traveled = totalDist - rem
       let cum = 0
-      let iIdx = 0
       for (let i = 0; i < instructions.length; i++) {
-        if (cum <= traveled) iIdx = i
-        cum += instructions[i].distanceInMeters
+        const stepEnd = cum + (instructions[i].distanceInMeters ?? 0)
+        if (traveled < stepEnd || i === instructions.length - 1) {
+          setInstrIdx(i)
+          setDistToTurn(Math.round(Math.max(0, stepEnd - traveled)))
+          break
+        }
+        cum = stepEnd
       }
-      setInstrIdx(Math.min(iIdx + 1, instructions.length - 1))
     }
   }, [route])
 
@@ -398,8 +402,8 @@ export function NavigationPage() {
             </span>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-text-primary truncate">{instruction.instruction}</p>
-              {instruction.distanceInMeters > 0 && (
-                <p className="text-xs text-brand mt-0.5">in {formatDistance(instruction.distanceInMeters)}</p>
+              {distToTurn !== null && distToTurn > 0 && (
+                <p className="text-xs text-brand mt-0.5">in {formatDistance(distToTurn)}</p>
               )}
             </div>
           </div>
