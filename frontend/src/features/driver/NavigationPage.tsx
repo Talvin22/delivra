@@ -355,6 +355,12 @@ export function NavigationPage() {
           attribution="&copy; OpenStreetMap &copy; CARTO"
           maxZoom={19}
         />
+        <TileLayer
+          url="/navigation/tiles/traffic/{z}/{x}/{y}"
+          maxZoom={19}
+          opacity={0.7}
+          zIndex={300}
+        />
         <MapController
           center={driverPos}
           follow={followMode}
