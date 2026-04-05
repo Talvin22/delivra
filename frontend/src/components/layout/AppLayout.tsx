@@ -50,12 +50,12 @@ export function AppLayout() {
     <div className="flex h-screen bg-bg-base overflow-hidden">
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-20 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 z-[1000] bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
       <aside className={cn(
-        'fixed lg:static inset-y-0 left-0 z-30 w-60 bg-bg-surface border-r border-bg-border',
+        'fixed lg:static inset-y-0 left-0 z-[1001] w-60 bg-bg-surface border-r border-bg-border',
         'flex flex-col transition-transform duration-200',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
       )}>
