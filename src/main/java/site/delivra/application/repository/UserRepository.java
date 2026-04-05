@@ -10,6 +10,7 @@ import site.delivra.application.model.entities.User;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecificationExecutor<User> {
@@ -39,4 +40,25 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
               AND r.name = 'DRIVER'
             """)
     List<User> findAvailableDrivers();
+
+    @Query("""
+            SELECT DISTINCT u FROM User u JOIN u.roles r
+            WHERE u.deleted = false
+              AND u.status = 'ACTIVE'
+              AND r.name = 'DRIVER'
+              AND u.company.id = :companyId
+            """)
+    List<User> findAvailableDriversByCompany(@Param("companyId") Integer companyId);
+
+    long countByDeletedFalse();
+
+    Page<User> findByDeletedFalseAndCompany_Id(Integer companyId, Pageable pageable);
+
+    long countByDeletedFalseAndCompany_Id(Integer companyId);
+
+    @Query("""
+            SELECT COUNT(DISTINCT u) FROM User u JOIN u.roles r
+            WHERE u.deleted = false AND r.name = :roleName AND u.company.id = :companyId
+            """)
+    long countByRoleAndCompany(@Param("roleName") String roleName, @Param("companyId") Integer companyId);
 }

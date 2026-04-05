@@ -24,12 +24,14 @@ import site.delivra.application.model.request.user.UpdateUserRolesRequest;
 import site.delivra.application.model.request.user.UserSearchRequest;
 import site.delivra.application.model.response.DelivraResponse;
 import site.delivra.application.model.response.PaginationResponse;
+import site.delivra.application.repository.CompanyRepository;
 import site.delivra.application.repository.RoleRepository;
 import site.delivra.application.repository.UserRepository;
 import site.delivra.application.repository.criteria.UserSearchCriteria;
 import site.delivra.application.security.validation.AccessValidator;
 import site.delivra.application.service.UserService;
 import site.delivra.application.service.model.DelivraServiceUserRole;
+import site.delivra.application.utils.ApiUtils;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -44,6 +46,8 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final AccessValidator accessValidator;
+    private final ApiUtils apiUtils;
+    private final CompanyRepository companyRepository;
 
     @Override
     public DelivraResponse<UserDTO> getById(@NotNull Integer id) {
@@ -73,6 +77,12 @@ public class UserServiceImpl implements UserService {
         roles.add(role);
 
         user.setRoles(roles);
+
+        Integer companyId = apiUtils.getCompanyIdFromAuthentication();
+        if (companyId != null) {
+            companyRepository.findByIdAndDeletedFalse(companyId).ifPresent(user::setCompany);
+        }
+
         User savedUser = userRepository.save(user);
         UserDTO dto = userMapper.toDto(savedUser);
 
@@ -133,7 +143,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public DelivraResponse<PaginationResponse<UserSearchDTO>> findAllUsers(Pageable pageable) {
-        Page<UserSearchDTO> users = userRepository.findByDeletedFalse(pageable)
+        Integer companyId = apiUtils.getCompanyIdFromAuthentication();
+        Page<UserSearchDTO> users = (companyId != null
+                ? userRepository.findByDeletedFalseAndCompany_Id(companyId, pageable)
+                : userRepository.findByDeletedFalse(pageable))
                 .map(userMapper::toUserSearchDTO);
 
         PaginationResponse<UserSearchDTO> response = new PaginationResponse<>(
@@ -151,6 +164,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public DelivraResponse<PaginationResponse<UserSearchDTO>> searchUsers(UserSearchRequest userSearchRequest, Pageable pageable) {
         Specification<User> specification = new UserSearchCriteria(userSearchRequest);
+        Integer companyId = apiUtils.getCompanyIdFromAuthentication();
+        if (companyId != null) {
+            specification = specification.and(
+                    (root, q, cb) -> cb.equal(root.get("company").get("id"), companyId));
+        }
 
         Page<UserSearchDTO> usersPage = userRepository.findAll(specification, pageable)
                 .map(userMapper::toUserSearchDTO);

@@ -32,4 +32,16 @@ public interface DeliveryTaskRepository extends JpaRepository<DeliveryTask, Inte
     long countActiveTasksForDriver(@Param("driverId") Integer driverId, @Param("statuses") List<DeliveryTaskStatus> statuses);
 
     List<DeliveryTask> findAllByDeletedFalseAndCreatedAfter(LocalDateTime since, Sort sort);
+
+    List<DeliveryTask> findAllByDeletedFalseAndCompany_IdAndCreatedAfter(Integer companyId, LocalDateTime since, Sort sort);
+
+    Page<DeliveryTask> findAllByDeletedFalseAndCompany_Id(Integer companyId, Pageable pageable);
+
+    long countByDeletedFalseAndCompany_Id(Integer companyId);
+
+    long countByDeletedFalseAndCompany_IdAndStatus(Integer companyId, DeliveryTaskStatus status);
+
+    long countByDeletedFalse();
+
+    long countByDeletedFalseAndStatus(DeliveryTaskStatus status);
 }

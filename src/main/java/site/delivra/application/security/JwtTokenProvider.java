@@ -45,6 +45,9 @@ public class JwtTokenProvider {
                 .toList();
         claims.put(AuthenticationConstants.ROLE, rolesList);
 
+        Integer companyId = user.getCompany() != null ? user.getCompany().getId() : null;
+        claims.put(AuthenticationConstants.COMPANY_ID, companyId);
+
         return createToken(claims, user.getEmail());
 
     }
@@ -79,6 +82,12 @@ public class JwtTokenProvider {
 
     public List<String> getRoles(String token) {
         return getAllClaimsFromToken(token).get(AuthenticationConstants.ROLE, List.class);
+    }
+
+    public Integer getCompanyId(String token) {
+        Object val = getAllClaimsFromToken(token).get(AuthenticationConstants.COMPANY_ID);
+        if (val == null) return null;
+        return ((Number) val).intValue();
     }
 
     private Claims getAllClaimsFromToken(String token) {

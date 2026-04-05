@@ -48,7 +48,9 @@ public class DriverRecommendationServiceImpl implements DriverRecommendationServ
         DeliveryTask task = deliveryTaskRepository.findByIdAndDeletedFalse(taskId)
                 .orElseThrow(() -> new NotFoundException(ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage(taskId)));
 
-        List<User> availableDrivers = userRepository.findAvailableDrivers();
+        List<User> availableDrivers = task.getCompany() != null
+                ? userRepository.findAvailableDriversByCompany(task.getCompany().getId())
+                : userRepository.findAvailableDrivers();
         log.debug("Found {} available drivers for task {}", availableDrivers.size(), taskId);
 
         if (availableDrivers.isEmpty()) {

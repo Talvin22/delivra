@@ -28,10 +28,13 @@ import site.delivra.application.model.entities.User;
 import site.delivra.application.repository.DeliveryTaskRepository;
 import site.delivra.application.repository.UserRepository;
 import site.delivra.application.repository.criteria.DeliveryTaskSearchCriteria;
+import site.delivra.application.model.entities.Company;
+import site.delivra.application.repository.CompanyRepository;
 import site.delivra.application.service.DeliveryTaskService;
 import site.delivra.application.service.EmailService;
 import site.delivra.application.service.HereApiService;
 import site.delivra.application.service.model.DelivraServiceUserRole;
+import site.delivra.application.utils.ApiUtils;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -40,9 +43,11 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
     private final DeliveryTaskRepository deliveryTaskRepository;
     private final UserRepository userRepository;
+    private final CompanyRepository companyRepository;
     private final DeliveryTaskMapper taskMapper;
     private final HereApiService hereApiService;
     private final EmailService emailService;
+    private final ApiUtils apiUtils;
 
 
     @Override
@@ -78,6 +83,12 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
                 log.warn("Geocoding failed for address '{}', saving task without coordinates: {}",
                         task.getAddress(), e.getMessage(), e);
             }
+        }
+
+        Integer companyId = apiUtils.getCompanyIdFromAuthentication();
+        if (companyId != null) {
+            companyRepository.findByIdAndDeletedFalse(companyId)
+                    .ifPresent(task::setCompany);
         }
 
         DeliveryTask saved = deliveryTaskRepository.save(task);
@@ -146,7 +157,10 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
 
     @Override
     public DelivraResponse<PaginationResponse<DeliveryTaskDTO>> findAllDeliveryTasks(Pageable pageable) {
-        Page<DeliveryTaskDTO> all = deliveryTaskRepository.findAllByDeletedFalse(pageable)
+        Integer companyId = apiUtils.getCompanyIdFromAuthentication();
+        Page<DeliveryTaskDTO> all = (companyId != null
+                ? deliveryTaskRepository.findAllByDeletedFalseAndCompany_Id(companyId, pageable)
+                : deliveryTaskRepository.findAllByDeletedFalse(pageable))
                 .map(taskMapper::toDto);
 
         return DelivraResponse.createSuccessful(PaginationResponse.<DeliveryTaskDTO>builder()
@@ -163,6 +177,11 @@ public class DeliveryTaskServiceImpl implements DeliveryTaskService {
     @Override
     public DelivraResponse<PaginationResponse<DeliveryTaskDTO>> searchDeliveryTasks(SearchDeliveryTaskRequest searchRequest, Pageable pageable) {
         Specification<DeliveryTask> specification = new DeliveryTaskSearchCriteria(searchRequest);
+        Integer companyId = apiUtils.getCompanyIdFromAuthentication();
+        if (companyId != null) {
+            specification = specification.and(
+                    (root, q, cb) -> cb.equal(root.get("company").get("id"), companyId));
+        }
 
         Page<DeliveryTaskDTO> all = deliveryTaskRepository.findAll(specification, pageable)
                 .map(taskMapper::toDto);

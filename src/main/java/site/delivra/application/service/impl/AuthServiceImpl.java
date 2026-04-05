@@ -23,6 +23,9 @@ import site.delivra.application.repository.RoleRepository;
 import site.delivra.application.repository.UserRepository;
 import site.delivra.application.security.JwtTokenProvider;
 import site.delivra.application.security.validation.AccessValidator;
+import site.delivra.application.model.entities.Company;
+import site.delivra.application.model.enums.CompanyStatus;
+import site.delivra.application.repository.CompanyRepository;
 import site.delivra.application.service.AuthService;
 import site.delivra.application.service.RefreshTokenService;
 import site.delivra.application.service.model.DelivraServiceUserRole;
@@ -42,6 +45,7 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccessValidator accessValidator;
+    private final CompanyRepository companyRepository;
 
     @Override
     public DelivraResponse<UserProfileDTO> login(@NotNull LoginRequest loginRequest) {
@@ -56,6 +60,18 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmailAndDeletedFalse(loginRequest.getEmail())
                 .orElseThrow(() -> new InvalidDataException(ApiErrorMessage.INVALID_USER_OR_PASSWORD.getMessage()));
 
+        if (user.getCompany() != null) {
+            Company company = user.getCompany();
+            if (company.getStatus() == CompanyStatus.TRIAL
+                    && company.getTrialEndsAt() != null
+                    && company.getTrialEndsAt().isBefore(java.time.LocalDateTime.now())) {
+                company.setStatus(CompanyStatus.SUSPENDED);
+                companyRepository.save(company);
+            }
+            if (company.getStatus() == CompanyStatus.SUSPENDED) {
+                throw new InvalidDataException("Company account is suspended. Please contact support.");
+            }
+        }
 
         RefreshToken refreshToken = refreshTokenService.generateOrUpdateRefreshToken(user);
         String token = jwtTokenProvider.generateToken(user);

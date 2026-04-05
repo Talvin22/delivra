@@ -17,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import site.delivra.application.model.constants.ApiErrorMessage;
+import site.delivra.application.security.DelivraUserDetails;
 import site.delivra.application.security.JwtTokenProvider;
 
 import java.io.IOException;
@@ -66,7 +67,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                                 jwt,
                                 authorities
                         );
-                        authenticationToken.setDetails(userIdOpt.get());
+                        Integer userId = Integer.parseInt(userIdOpt.get());
+                        Integer companyId = jwtTokenProvider.getCompanyId(jwt);
+                        authenticationToken.setDetails(new DelivraUserDetails(userId, companyId));
                         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     }
                 }

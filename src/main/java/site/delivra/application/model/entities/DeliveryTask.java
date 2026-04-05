@@ -38,6 +38,10 @@ public class DeliveryTask {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private DeliveryTaskStatus status;

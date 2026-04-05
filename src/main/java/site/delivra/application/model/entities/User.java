@@ -11,6 +11,9 @@ import site.delivra.application.model.enums.RegistrationStatus;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 @Table(name = "users")
@@ -68,6 +71,10 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Collection<Role> roles;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "company_id")
+    private Company company;
 
     @OneToMany(mappedBy = "user")
     private Collection<DeliveryTask> deliveryTasks;

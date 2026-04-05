@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import site.delivra.application.model.constants.ApiConstants;
+import site.delivra.application.security.DelivraUserDetails;
 import site.delivra.application.security.JwtTokenProvider;
 
 import java.util.UUID;
@@ -44,8 +45,15 @@ public class ApiUtils {
 
     public Integer getUserIdFromAuthentication() {
         String jwtToken = SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
-
         return Integer.parseInt(jwtTokenProvider.getUserId(jwtToken));
+    }
+
+    public Integer getCompanyIdFromAuthentication() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getDetails() instanceof DelivraUserDetails details) {
+            return details.companyId();
+        }
+        return null;
     }
 
 }

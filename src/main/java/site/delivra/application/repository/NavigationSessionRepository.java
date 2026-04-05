@@ -25,4 +25,9 @@ public interface NavigationSessionRepository extends JpaRepository<NavigationSes
             """)
     List<NavigationSession> findLastCompletedSessionsForDriver(@Param("driverId") Integer driverId,
                                                                org.springframework.data.domain.Pageable pageable);
+
+    @Query("SELECT COUNT(ns) FROM NavigationSession ns WHERE ns.deliveryTask.company.id = :companyId")
+    long countByCompanyId(@Param("companyId") Integer companyId);
+
+    long count();
 }
