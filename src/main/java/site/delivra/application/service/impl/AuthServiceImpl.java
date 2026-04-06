@@ -8,6 +8,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import site.delivra.application.exception.InvalidDataException;
 import site.delivra.application.exception.NotFoundException;
 import site.delivra.application.mapper.UserMapper;
@@ -136,6 +137,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void requestPasswordReset(ForgotPasswordRequest request) {
         userRepository.findByEmailAndDeletedFalse(request.getEmail()).ifPresent(user -> {
             userTokenRepository.deleteAllByUserAndType(user, TokenType.PASSWORD_RESET);
@@ -146,6 +148,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void resetPassword(ResetPasswordRequest request) {
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new InvalidDataException(ApiErrorMessage.MISMATCH_PASSWORDS.getMessage());
@@ -173,6 +176,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void verifyEmail(String token) {
         UserToken userToken = userTokenRepository
                 .findByTokenAndType(token, TokenType.EMAIL_VERIFICATION)
@@ -195,6 +199,7 @@ public class AuthServiceImpl implements AuthService {
         log.info("Email verified for user id={}", user.getId());
     }
 
+    @Transactional
     private void sendVerificationEmail(User user) {
         userTokenRepository.deleteAllByUserAndType(user, TokenType.EMAIL_VERIFICATION);
         UserToken token = buildToken(user, TokenType.EMAIL_VERIFICATION, 24);
