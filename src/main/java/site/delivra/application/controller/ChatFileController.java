@@ -9,16 +9,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import site.delivra.application.model.dto.chat.ChatMessageDTO;
 import site.delivra.application.service.ChatService;
+import site.delivra.application.utils.ApiUtils;
 
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.Principal;
 
 @Slf4j
 @RestController
@@ -27,6 +26,7 @@ public class ChatFileController {
 
     private final ChatService chatService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ApiUtils apiUtils;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -34,10 +34,9 @@ public class ChatFileController {
     @PostMapping("/tasks/{taskId}/chat/files")
     public ResponseEntity<ChatMessageDTO> uploadFile(
             @PathVariable Integer taskId,
-            @RequestParam("file") MultipartFile file,
-            Principal principal) {
+            @RequestParam("file") MultipartFile file) {
 
-        Integer senderId = extractUserId(principal);
+        Integer senderId = apiUtils.getUserIdFromAuthentication();
         ChatMessageDTO dto = chatService.uploadFile(taskId, senderId, file);
         messagingTemplate.convertAndSend("/topic/chat/" + taskId, dto);
         return ResponseEntity.ok(dto);
@@ -65,6 +64,7 @@ public class ChatFileController {
     }
 
     private String resolveContentType(String filename) {
+
         String lower = filename.toLowerCase();
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
         if (lower.endsWith(".png"))  return "image/png";
@@ -72,12 +72,5 @@ public class ChatFileController {
         if (lower.endsWith(".webp")) return "image/webp";
         if (lower.endsWith(".pdf"))  return "application/pdf";
         return "application/octet-stream";
-    }
-
-    private Integer extractUserId(Principal principal) {
-        if (principal instanceof UsernamePasswordAuthenticationToken auth) {
-            return Integer.parseInt((String) auth.getDetails());
-        }
-        throw new IllegalStateException("Cannot extract userId from principal");
     }
 }
