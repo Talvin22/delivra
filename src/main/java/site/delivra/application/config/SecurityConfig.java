@@ -51,6 +51,9 @@ public class SecurityConfig {
             // WebSocket handshake
             new AntPathRequestMatcher("/ws/**"),
 
+            // Chat file downloads (UUID-named, unguessable)
+            new AntPathRequestMatcher("/chat/files/**", GET),
+
             // Static frontend
             new AntPathRequestMatcher("/"),
             new AntPathRequestMatcher("/index.html"),
