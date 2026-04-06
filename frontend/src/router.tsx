@@ -5,6 +5,8 @@ import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage'
 import { VerifyEmailPage } from '@/features/auth/VerifyEmailPage'
 import { LandingPage } from '@/features/landing/LandingPage'
+import { TermsPage } from '@/features/landing/TermsPage'
+import { PrivacyPage } from '@/features/landing/PrivacyPage'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { DriverTaskListPage } from '@/features/driver/DriverTaskListPage'
@@ -23,6 +25,8 @@ export const router = createBrowserRouter([
   { path: '/app', element: <RoleRedirect /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <CompanyRegistrationPage /> },
+  { path: '/terms', element: <TermsPage /> },
+  { path: '/privacy', element: <PrivacyPage /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
   { path: '/reset-password', element: <ResetPasswordPage /> },
   { path: '/verify-email', element: <VerifyEmailPage /> },

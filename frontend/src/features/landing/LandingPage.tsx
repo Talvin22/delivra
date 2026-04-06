@@ -206,6 +206,75 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* ── Stats ── */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          {[
+            { value: '40%', label: 'Less time spent on route planning' },
+            { value: '< 30s', label: 'Average task assignment time' },
+            { value: '99%', label: 'Platform uptime SLA' },
+            { value: '2 min', label: 'Time to onboard a new driver' },
+          ].map(s => (
+            <div key={s.label} className="bg-bg-surface border border-bg-border rounded-xl p-6">
+              <div className="text-3xl font-bold text-brand mb-2">{s.value}</div>
+              <div className="text-text-secondary text-sm">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Who it's for ── */}
+      <section className="bg-bg-surface border-y border-bg-border">
+        <div className="max-w-6xl mx-auto px-6 py-24">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold mb-3">Who is Delivra for?</h2>
+            <p className="text-text-secondary max-w-xl mx-auto">
+              Built for businesses where accurate, on-time delivery is non-negotiable.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: '🛒',
+                title: 'E-commerce & Retail',
+                desc: 'Manage last-mile deliveries from warehouse to customer. Track every driver in real time and reduce failed deliveries.',
+              },
+              {
+                icon: '🍕',
+                title: 'Food & Grocery Delivery',
+                desc: 'Time-sensitive routes with live traffic avoidance. Chat directly with drivers when plans change.',
+              },
+              {
+                icon: '🏗️',
+                title: 'Construction & B2B Logistics',
+                desc: 'Heavy vehicle routing with weight, height, and width constraints. No more trucks under low bridges.',
+              },
+              {
+                icon: '💊',
+                title: 'Pharmaceutical Distribution',
+                desc: 'Strict delivery windows, detailed reporting, and audit trail for every completed task.',
+              },
+              {
+                icon: '📦',
+                title: 'Courier Services',
+                desc: 'Handle dozens of concurrent drivers across a city. Assign tasks from the dispatcher panel in seconds.',
+              },
+              {
+                icon: '🏢',
+                title: 'Logistics Companies',
+                desc: 'Multi-company architecture lets you manage multiple clients from one platform with full data isolation.',
+              },
+            ].map(u => (
+              <div key={u.title} className="p-6 rounded-xl border border-bg-border hover:border-brand/40 transition-colors">
+                <div className="text-2xl mb-3">{u.icon}</div>
+                <h3 className="font-semibold mb-2">{u.title}</h3>
+                <p className="text-text-secondary text-sm leading-relaxed">{u.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Pricing ── */}
       <section id="pricing" className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center mb-14">
@@ -258,6 +327,53 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* ── FAQ ── */}
+      <section className="max-w-3xl mx-auto px-6 py-24">
+        <div className="text-center mb-14">
+          <h2 className="text-3xl font-bold mb-3">Frequently asked questions</h2>
+        </div>
+        <div className="space-y-4">
+          {[
+            {
+              q: 'Do I need a credit card to start the trial?',
+              a: 'No. The 14-day Trial plan is completely free with no payment information required.',
+            },
+            {
+              q: 'What happens when the trial ends?',
+              a: 'Your account is suspended but your data is retained for 30 days. You can upgrade to Pro at any time to restore full access.',
+            },
+            {
+              q: 'Can drivers use Delivra on mobile?',
+              a: 'Yes. Delivra is a responsive web app that works on any modern smartphone browser — no app download required.',
+            },
+            {
+              q: 'Is the GPS tracking always on?',
+              a: 'No. Location is only tracked during an active navigation session, which the driver explicitly starts. There is no background tracking.',
+            },
+            {
+              q: 'Does routing work for large trucks?',
+              a: 'Yes. You can specify vehicle gross weight, height, width, and length. Routes avoid roads with incompatible restrictions.',
+            },
+            {
+              q: 'Can I export delivery data?',
+              a: 'Yes. Dispatchers and admins can export a full Excel report of all tasks, statuses, and timings for any date range.',
+            },
+            {
+              q: 'How is my data protected?',
+              a: 'All passwords are BCrypt-hashed. Connections use HTTPS. API keys and secrets are stored as environment variables, never in code. See our Privacy Policy for full details.',
+            },
+          ].map(({ q, a }) => (
+            <details key={q} className="group bg-bg-surface border border-bg-border rounded-xl overflow-hidden">
+              <summary className="flex items-center justify-between px-6 py-4 cursor-pointer font-medium text-sm list-none select-none hover:bg-bg-raised transition-colors">
+                {q}
+                <span className="text-text-muted ml-4 group-open:rotate-180 transition-transform">▾</span>
+              </summary>
+              <p className="px-6 pb-4 text-text-secondary text-sm leading-relaxed">{a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
       {/* ── CTA banner ── */}
       <section className="bg-brand/5 border-y border-brand/10">
         <div className="max-w-3xl mx-auto px-6 py-20 text-center">
@@ -276,14 +392,24 @@ export function LandingPage() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-bg-border">
-        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-lg font-bold text-brand">⬡ Delivra</span>
-          <div className="flex gap-6 text-sm text-text-muted">
-            <Link to="/login" className="hover:text-text-primary transition-colors">Sign in</Link>
-            <Link to="/register" className="hover:text-text-primary transition-colors">Register</Link>
-            <a href="#pricing" className="hover:text-text-primary transition-colors">Pricing</a>
+        <div className="max-w-6xl mx-auto px-6 py-10">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <span className="text-lg font-bold text-brand">⬡ Delivra</span>
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-text-muted">
+              <Link to="/login" className="hover:text-text-primary transition-colors">Sign in</Link>
+              <Link to="/register" className="hover:text-text-primary transition-colors">Register</Link>
+              <a href="#pricing" className="hover:text-text-primary transition-colors">Pricing</a>
+              <Link to="/terms" className="hover:text-text-primary transition-colors">Terms of Service</Link>
+              <Link to="/privacy" className="hover:text-text-primary transition-colors">Privacy Policy</Link>
+            </div>
+            <span className="text-sm text-text-muted">© 2026 Delivra. All rights reserved.</span>
           </div>
-          <span className="text-sm text-text-muted">© 2026 Delivra. All rights reserved.</span>
+          <p className="text-center text-xs text-text-muted mt-6">
+            By registering, you agree to our{' '}
+            <Link to="/terms" className="text-brand hover:underline">Terms of Service</Link>
+            {' '}and{' '}
+            <Link to="/privacy" className="text-brand hover:underline">Privacy Policy</Link>.
+          </p>
         </div>
       </footer>
 
