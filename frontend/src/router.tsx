@@ -4,6 +4,7 @@ import { CompanyRegistrationPage } from '@/features/auth/CompanyRegistrationPage
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage'
 import { VerifyEmailPage } from '@/features/auth/VerifyEmailPage'
+import { LandingPage } from '@/features/landing/LandingPage'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { DriverTaskListPage } from '@/features/driver/DriverTaskListPage'
@@ -18,12 +19,13 @@ import { RoleRedirect } from '@/features/auth/RoleRedirect'
 import { ReportPage } from '@/features/report/ReportPage'
 
 export const router = createBrowserRouter([
+  { path: '/', element: <LandingPage /> },
+  { path: '/app', element: <RoleRedirect /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <CompanyRegistrationPage /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
   { path: '/reset-password', element: <ResetPasswordPage /> },
   { path: '/verify-email', element: <VerifyEmailPage /> },
-  { path: '/', element: <RoleRedirect /> },
 
   {
     element: (
