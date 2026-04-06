@@ -35,6 +35,9 @@ public class EmailServiceImpl implements EmailService {
     @Value("${app.mail.from.name:Delivra Notifications}")
     private String mailFromName;
 
+    @Value("${app.base-url:http://localhost:5173}")
+    private String baseUrl;
+
     @Async
     @Override
     public void sendChatNotification(DeliveryTask task, User sender, String messageText) {
@@ -121,6 +124,31 @@ public class EmailServiceImpl implements EmailService {
         } else {
             return Optional.of(driver);
         }
+    }
+
+    @Async
+    @Override
+    public void sendPasswordResetEmail(User user, String token) {
+        if (!mailEnabled) return;
+        String link = baseUrl + "/reset-password?token=" + token;
+        String subject = "Password reset — Delivra";
+        String body = "<h2>Password reset request</h2>"
+                + "<p>Click the link below to set a new password. The link is valid for <b>1 hour</b>.</p>"
+                + "<p><a href=\"" + link + "\">Reset password</a></p>"
+                + "<p>If you did not request this, ignore this email.</p>";
+        send(user.getEmail(), subject, body);
+    }
+
+    @Async
+    @Override
+    public void sendEmailVerificationEmail(User user, String token) {
+        if (!mailEnabled) return;
+        String link = baseUrl + "/verify-email?token=" + token;
+        String subject = "Confirm your email — Delivra";
+        String body = "<h2>Welcome to Delivra, " + user.getUsername() + "!</h2>"
+                + "<p>Please confirm your email address by clicking the link below:</p>"
+                + "<p><a href=\"" + link + "\">Verify email</a></p>";
+        send(user.getEmail(), subject, body);
     }
 
     private void send(String to, String subject, String htmlBody) {

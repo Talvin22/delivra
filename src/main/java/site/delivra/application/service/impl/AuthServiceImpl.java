@@ -26,12 +26,20 @@ import site.delivra.application.security.validation.AccessValidator;
 import site.delivra.application.model.entities.Company;
 import site.delivra.application.model.enums.CompanyStatus;
 import site.delivra.application.repository.CompanyRepository;
+import site.delivra.application.model.entities.UserToken;
+import site.delivra.application.model.enums.TokenType;
+import site.delivra.application.model.request.user.ForgotPasswordRequest;
+import site.delivra.application.model.request.user.ResetPasswordRequest;
+import site.delivra.application.repository.UserTokenRepository;
 import site.delivra.application.service.AuthService;
+import site.delivra.application.service.EmailService;
 import site.delivra.application.service.RefreshTokenService;
 import site.delivra.application.service.model.DelivraServiceUserRole;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -46,6 +54,8 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AccessValidator accessValidator;
     private final CompanyRepository companyRepository;
+    private final UserTokenRepository userTokenRepository;
+    private final EmailService emailService;
 
     @Override
     public DelivraResponse<UserProfileDTO> login(@NotNull LoginRequest loginRequest) {
@@ -114,6 +124,8 @@ public class AuthServiceImpl implements AuthService {
         newUser.setRoles(roles);
         userRepository.save(newUser);
 
+        sendVerificationEmail(newUser);
+
         RefreshToken refreshToken = refreshTokenService.generateOrUpdateRefreshToken(newUser);
         String token = jwtTokenProvider.generateToken(newUser);
         UserProfileDTO userProfileDTO = userMapper.toUserProfileDto(newUser, token, refreshToken.getToken());
@@ -121,5 +133,81 @@ public class AuthServiceImpl implements AuthService {
 
         return DelivraResponse.createSuccessfulWithNewToken(userProfileDTO);
 
+    }
+
+    @Override
+    public void requestPasswordReset(ForgotPasswordRequest request) {
+        userRepository.findByEmailAndDeletedFalse(request.getEmail()).ifPresent(user -> {
+            userTokenRepository.deleteAllByUserAndType(user, TokenType.PASSWORD_RESET);
+            UserToken token = buildToken(user, TokenType.PASSWORD_RESET, 1);
+            userTokenRepository.save(token);
+            emailService.sendPasswordResetEmail(user, token.getToken());
+        });
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new InvalidDataException(ApiErrorMessage.MISMATCH_PASSWORDS.getMessage());
+        }
+
+        UserToken userToken = userTokenRepository
+                .findByTokenAndType(request.getToken(), TokenType.PASSWORD_RESET)
+                .orElseThrow(() -> new InvalidDataException(ApiErrorMessage.INVALID_OR_EXPIRED_TOKEN.getMessage()));
+
+        if (userToken.isExpired()) {
+            throw new InvalidDataException(ApiErrorMessage.INVALID_OR_EXPIRED_TOKEN.getMessage());
+        }
+        if (userToken.isUsed()) {
+            throw new InvalidDataException(ApiErrorMessage.TOKEN_ALREADY_USED.getMessage());
+        }
+
+        User user = userToken.getUser();
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        userToken.setUsedAt(LocalDateTime.now());
+        userTokenRepository.save(userToken);
+
+        log.info("Password reset successful for user id={}", user.getId());
+    }
+
+    @Override
+    public void verifyEmail(String token) {
+        UserToken userToken = userTokenRepository
+                .findByTokenAndType(token, TokenType.EMAIL_VERIFICATION)
+                .orElseThrow(() -> new InvalidDataException(ApiErrorMessage.INVALID_OR_EXPIRED_TOKEN.getMessage()));
+
+        if (userToken.isExpired()) {
+            throw new InvalidDataException(ApiErrorMessage.INVALID_OR_EXPIRED_TOKEN.getMessage());
+        }
+        if (userToken.isUsed()) {
+            throw new InvalidDataException(ApiErrorMessage.TOKEN_ALREADY_USED.getMessage());
+        }
+
+        User user = userToken.getUser();
+        user.setEmailVerified(true);
+        userRepository.save(user);
+
+        userToken.setUsedAt(LocalDateTime.now());
+        userTokenRepository.save(userToken);
+
+        log.info("Email verified for user id={}", user.getId());
+    }
+
+    private void sendVerificationEmail(User user) {
+        userTokenRepository.deleteAllByUserAndType(user, TokenType.EMAIL_VERIFICATION);
+        UserToken token = buildToken(user, TokenType.EMAIL_VERIFICATION, 24);
+        userTokenRepository.save(token);
+        emailService.sendEmailVerificationEmail(user, token.getToken());
+    }
+
+    private UserToken buildToken(User user, TokenType type, int validHours) {
+        UserToken token = new UserToken();
+        token.setUser(user);
+        token.setToken(UUID.randomUUID().toString());
+        token.setType(type);
+        token.setExpiresAt(LocalDateTime.now().plusHours(validHours));
+        return token;
     }
 }

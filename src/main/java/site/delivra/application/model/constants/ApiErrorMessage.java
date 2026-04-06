@@ -43,7 +43,10 @@ public enum ApiErrorMessage {
     NAVIGATION_SESSION_NOT_FOUND("Navigation session with ID: %s not found"),
     NAVIGATION_SESSION_ALREADY_ACTIVE("Delivery task with ID: %s already has an active navigation session"),
     NAVIGATION_SESSION_NOT_ACTIVE("Navigation session with ID: %s is not active"),
-    CHAT_MESSAGE_NOT_FOUND("Chat message with ID: %s not found")
+    CHAT_MESSAGE_NOT_FOUND("Chat message with ID: %s not found"),
+
+    INVALID_OR_EXPIRED_TOKEN("Invalid or expired token"),
+    TOKEN_ALREADY_USED("This token has already been used")
     ;
 
     private final String message;

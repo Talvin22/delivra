@@ -60,6 +60,9 @@ public class User {
     @Column(nullable = false)
     private Boolean deleted = false;
 
+    @Column(name = "email_verified", nullable = false)
+    private Boolean emailVerified = false;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "registration_status")
     private RegistrationStatus status;

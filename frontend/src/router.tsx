@@ -1,6 +1,9 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { CompanyRegistrationPage } from '@/features/auth/CompanyRegistrationPage'
+import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage'
+import { VerifyEmailPage } from '@/features/auth/VerifyEmailPage'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { DriverTaskListPage } from '@/features/driver/DriverTaskListPage'
@@ -17,6 +20,9 @@ import { ReportPage } from '@/features/report/ReportPage'
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <CompanyRegistrationPage /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
+  { path: '/verify-email', element: <VerifyEmailPage /> },
   { path: '/', element: <RoleRedirect /> },
 
   {

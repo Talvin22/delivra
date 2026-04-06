@@ -7,4 +7,13 @@ export const authApi = {
 
   refresh: (token: string) =>
     api.get<DelivraResponse<UserProfileDTO>>('/auth/refresh/token', { params: { token } }),
+
+  forgotPassword: (email: string) =>
+    api.post<DelivraResponse<string>>('/auth/password/forgot', { email }),
+
+  resetPassword: (token: string, newPassword: string, confirmPassword: string) =>
+    api.post<DelivraResponse<string>>('/auth/password/reset', { token, newPassword, confirmPassword }),
+
+  verifyEmail: (token: string) =>
+    api.post<DelivraResponse<string>>('/auth/verify-email', null, { params: { token } }),
 }

@@ -53,14 +53,21 @@ export function LoginPage() {
             autoComplete="email"
             {...register('email', { required: true })}
           />
-          <Input
-            id="password"
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            autoComplete="current-password"
-            {...register('password', { required: true })}
-          />
+          <div>
+            <Input
+              id="password"
+              label="Password"
+              type="password"
+              placeholder="••••••••"
+              autoComplete="current-password"
+              {...register('password', { required: true })}
+            />
+            <div className="text-right mt-1">
+              <Link to="/forgot-password" className="text-xs text-text-muted hover:text-brand">
+                Forgot password?
+              </Link>
+            </div>
+          </div>
 
           {error && <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-md px-3 py-2">{error}</p>}
 

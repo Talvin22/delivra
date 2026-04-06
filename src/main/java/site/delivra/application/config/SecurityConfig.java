@@ -37,6 +37,9 @@ public class SecurityConfig {
             new AntPathRequestMatcher("/auth/login", POST),
             new AntPathRequestMatcher("/auth/register", POST),
             new AntPathRequestMatcher("/auth/refresh/token", GET),
+            new AntPathRequestMatcher("/auth/password/forgot", POST),
+            new AntPathRequestMatcher("/auth/password/reset", POST),
+            new AntPathRequestMatcher("/auth/verify-email", POST),
             new AntPathRequestMatcher("/companies/register", POST),
 
             new AntPathRequestMatcher("/v3/api-docs/**"),

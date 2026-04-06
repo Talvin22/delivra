@@ -2,8 +2,10 @@ package site.delivra.application.service;
 
 
 import site.delivra.application.model.dto.user.UserProfileDTO;
+import site.delivra.application.model.request.user.ForgotPasswordRequest;
 import site.delivra.application.model.request.user.LoginRequest;
 import site.delivra.application.model.request.user.RegistrationUserRequest;
+import site.delivra.application.model.request.user.ResetPasswordRequest;
 import site.delivra.application.model.response.DelivraResponse;
 
 public interface AuthService {
@@ -13,4 +15,10 @@ public interface AuthService {
     DelivraResponse<UserProfileDTO> refreshAccessToken(String refreshToken);
 
     DelivraResponse<UserProfileDTO> register(RegistrationUserRequest registrationUserRequest);
+
+    void requestPasswordReset(ForgotPasswordRequest request);
+
+    void resetPassword(ResetPasswordRequest request);
+
+    void verifyEmail(String token);
 }

@@ -7,4 +7,6 @@ public interface EmailService {
     void sendChatNotification(DeliveryTask task, User sender, String messageText);
     void sendTaskAssignedNotification(DeliveryTask task, User driver);
     void sendTaskStatusChangedNotification(DeliveryTask task, User driver);
+    void sendPasswordResetEmail(User user, String token);
+    void sendEmailVerificationEmail(User user, String token);
 }
