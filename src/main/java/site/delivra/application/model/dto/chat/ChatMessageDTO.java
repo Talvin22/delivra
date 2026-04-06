@@ -19,6 +19,8 @@ public class ChatMessageDTO implements Serializable {
     private Integer senderId;
     private String senderUsername;
     private String messageText;
+    private String fileUrl;
+    private String fileName;
     private Boolean isRead;
     private LocalDateTime created;
 }

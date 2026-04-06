@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { X, Send } from 'lucide-react'
+import { X, Send, Paperclip, FileText, Download } from 'lucide-react'
 import { chatApi } from '@/api/chat'
 import { useWsStore } from '@/store/wsStore'
 import { useAuthStore } from '@/store/authStore'
@@ -14,12 +14,48 @@ interface Props {
   overlay?: boolean
 }
 
+const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+
+function isImage(fileName: string | null): boolean {
+  if (!fileName) return false
+  const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
+  return IMAGE_EXTENSIONS.includes(ext)
+}
+
+function FileAttachment({ fileUrl, fileName }: { fileUrl: string; fileName: string }) {
+  if (isImage(fileName)) {
+    return (
+      <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+        <img
+          src={fileUrl}
+          alt={fileName}
+          className="max-w-[200px] max-h-[200px] rounded-lg object-cover border border-bg-border cursor-pointer hover:opacity-90 transition-opacity"
+        />
+      </a>
+    )
+  }
+
+  return (
+    <a
+      href={fileUrl}
+      download={fileName}
+      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-bg-base border border-bg-border hover:border-brand/40 transition-colors"
+    >
+      <FileText size={16} className="text-brand flex-shrink-0" />
+      <span className="text-xs text-text-primary truncate max-w-[140px]">{fileName}</span>
+      <Download size={13} className="text-text-muted flex-shrink-0" />
+    </a>
+  )
+}
+
 export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
   const user = useAuthStore(s => s.user)
   const { subscribe, publish, connected } = useWsStore()
   const [messages, setMessages] = useState<ChatMessageDTO[]>([])
   const [text, setText] = useState('')
+  const [uploading, setUploading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: history } = useQuery({
     queryKey: ['chat', taskId],
@@ -32,7 +68,12 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
 
   useEffect(() => {
     const unsub = subscribe(`/topic/chat/${taskId}`, (data) => {
-      setMessages(prev => [...prev, data as ChatMessageDTO])
+      setMessages(prev => {
+        const incoming = data as ChatMessageDTO
+        // deduplicate by id (file upload already added it optimistically via ws broadcast)
+        if (prev.some(m => m.id === incoming.id)) return prev
+        return [...prev, incoming]
+      })
     })
     return unsub
   }, [taskId, subscribe])
@@ -46,6 +87,23 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
     if (!t) return
     publish(`/app/chat/${taskId}`, { messageText: t })
     setText('')
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+
+    setUploading(true)
+    try {
+      await chatApi.uploadFile(taskId, file)
+      // message will arrive via WebSocket broadcast
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? 'Upload failed'
+      alert(msg)
+    } finally {
+      setUploading(false)
+    }
   }
 
   const inner = (
@@ -74,7 +132,17 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
                   : 'bg-bg-raised border border-bg-border text-text-primary rounded-bl-sm',
               )}>
                 {!mine && <p className="text-xs text-text-muted mb-1">{msg.senderUsername}</p>}
-                <p className="leading-relaxed break-words">{msg.messageText}</p>
+
+                {msg.fileUrl && msg.fileName && (
+                  <div className="mb-1">
+                    <FileAttachment fileUrl={msg.fileUrl} fileName={msg.fileName} />
+                  </div>
+                )}
+
+                {msg.messageText && (
+                  <p className="leading-relaxed break-words">{msg.messageText}</p>
+                )}
+
                 <p className="text-[10px] text-text-muted mt-1 text-right">{formatTime(msg.created)}</p>
               </div>
             </div>
@@ -93,6 +161,25 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
       {/* Input */}
       <div className="flex items-center gap-2 p-3 border-t border-bg-border flex-shrink-0">
         <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx"
+          onChange={handleFileChange}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={!connected || uploading}
+          title="Attach file"
+          className="w-9 h-9 rounded-full border border-bg-border flex items-center justify-center text-text-muted hover:text-brand hover:border-brand/40 disabled:opacity-40 transition-colors flex-shrink-0"
+        >
+          {uploading
+            ? <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+            : <Paperclip size={16} />
+          }
+        </button>
+
+        <input
           className="flex-1 bg-bg-base border border-bg-border rounded-full px-4 py-2 text-sm text-text-primary placeholder:text-text-muted outline-none focus:border-brand transition-colors disabled:opacity-50"
           placeholder={connected ? 'Message...' : 'No connection...'}
           value={text}
@@ -103,7 +190,7 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
         <button
           onClick={send}
           disabled={!text.trim() || !connected}
-          className="w-9 h-9 rounded-full bg-brand flex items-center justify-center text-white disabled:opacity-40 transition-opacity"
+          className="w-9 h-9 rounded-full bg-brand flex items-center justify-center text-white disabled:opacity-40 transition-opacity flex-shrink-0"
         >
           <Send size={15} />
         </button>

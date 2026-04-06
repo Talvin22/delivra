@@ -16,6 +16,7 @@ export default defineConfig({
       '/tasks':   { target: 'http://localhost:8189', changeOrigin: true },
       '/reports':    { target: 'http://localhost:8189', changeOrigin: true },
       '/navigation': { target: 'http://localhost:8189', changeOrigin: true },
+      '/chat':       { target: 'http://localhost:8189', changeOrigin: true },
       '/companies':  { target: 'http://localhost:8189', changeOrigin: true },
       '/admin/companies': { target: 'http://localhost:8189', changeOrigin: true },
       '/admin/stats':     { target: 'http://localhost:8189', changeOrigin: true },

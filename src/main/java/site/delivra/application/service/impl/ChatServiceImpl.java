@@ -2,10 +2,19 @@ package site.delivra.application.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Set;
+import java.util.UUID;
 import site.delivra.application.exception.NotFoundException;
 import site.delivra.application.model.constants.ApiErrorMessage;
 import site.delivra.application.model.dto.chat.ChatMessageDTO;
@@ -26,10 +35,16 @@ import site.delivra.application.service.EmailService;
 @RequiredArgsConstructor
 public class ChatServiceImpl implements ChatService {
 
+    private static final Set<String> ALLOWED_EXTENSIONS =
+            Set.of("jpg", "jpeg", "png", "gif", "webp", "pdf", "doc", "docx", "xls", "xlsx");
+
     private final ChatMessageRepository chatMessageRepository;
     private final DeliveryTaskRepository taskRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+
+    @Value("${app.upload.dir:uploads}")
+    private String uploadDir;
 
     @Override
     @Transactional
@@ -52,6 +67,52 @@ public class ChatServiceImpl implements ChatService {
             task.getUser().getEmail(); // force-init lazy proxy within transaction
         }
         emailService.sendChatNotification(task, sender, request.getMessageText());
+
+        return toDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public ChatMessageDTO uploadFile(Integer taskId, Integer senderId, MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new site.delivra.application.exception.InvalidDataException("File is empty");
+        }
+
+        String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "file";
+        String ext = "";
+        int dot = originalName.lastIndexOf('.');
+        if (dot >= 0) ext = originalName.substring(dot + 1).toLowerCase();
+
+        if (!ALLOWED_EXTENSIONS.contains(ext)) {
+            throw new site.delivra.application.exception.InvalidDataException(
+                    "File type not allowed. Allowed: " + String.join(", ", ALLOWED_EXTENSIONS));
+        }
+
+        DeliveryTask task = taskRepository.findByIdAndDeletedFalse(taskId)
+                .orElseThrow(() -> new site.delivra.application.exception.NotFoundException(
+                        site.delivra.application.model.constants.ApiErrorMessage.DELIVERY_NOT_FOUND_BY_ID.getMessage(taskId)));
+
+        User sender = userRepository.findByIdAndDeletedFalse(senderId)
+                .orElseThrow(() -> new site.delivra.application.exception.NotFoundException(
+                        site.delivra.application.model.constants.ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(senderId)));
+
+        String storedName = UUID.randomUUID() + "." + ext;
+        Path dir = Paths.get(uploadDir, "chat");
+        try {
+            Files.createDirectories(dir);
+            file.transferTo(dir.resolve(storedName));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store file: " + e.getMessage(), e);
+        }
+
+        ChatMessage message = new ChatMessage();
+        message.setDeliveryTask(task);
+        message.setSender(sender);
+        message.setFileUrl("/chat/files/" + storedName);
+        message.setFileName(originalName);
+
+        ChatMessage saved = chatMessageRepository.save(message);
+        log.debug("File message saved: id={}, taskId={}, file={}", saved.getId(), taskId, storedName);
 
         return toDto(saved);
     }
@@ -90,6 +151,8 @@ public class ChatServiceImpl implements ChatService {
                 .senderId(message.getSender().getId())
                 .senderUsername(message.getSender().getUsername())
                 .messageText(message.getMessageText())
+                .fileUrl(message.getFileUrl())
+                .fileName(message.getFileName())
                 .isRead(message.getIsRead())
                 .created(message.getCreated())
                 .build();

@@ -9,4 +9,12 @@ export const chatApi = {
 
   markRead: (taskId: number) =>
     api.patch(`/tasks/${taskId}/chat/read`),
+
+  uploadFile: (taskId: number, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post<ChatMessageDTO>(`/tasks/${taskId}/chat/files`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
 }

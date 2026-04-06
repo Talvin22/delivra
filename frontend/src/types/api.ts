@@ -110,7 +110,9 @@ export interface ChatMessageDTO {
   taskId: number
   senderId: number
   senderUsername: string
-  messageText: string
+  messageText: string | null
+  fileUrl: string | null
+  fileName: string | null
   isRead: boolean
   created: string
 }

@@ -38,8 +38,14 @@ public class ChatMessage {
     @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
 
-    @Column(name = "message_text", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "message_text", columnDefinition = "TEXT")
     private String messageText;
+
+    @Column(name = "file_url", length = 500)
+    private String fileUrl;
+
+    @Column(name = "file_name", length = 255)
+    private String fileName;
 
     @Column(name = "is_read", nullable = false)
     private Boolean isRead = false;
