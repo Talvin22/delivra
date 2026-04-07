@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { X, Send, Paperclip, FileText, Download } from 'lucide-react'
+import { X, Send, Paperclip, FileText, Download, Check, CheckCheck } from 'lucide-react'
 import { chatApi } from '@/api/chat'
 import { useWsStore } from '@/store/wsStore'
 import { useAuthStore } from '@/store/authStore'
@@ -48,6 +48,12 @@ function FileAttachment({ fileUrl, fileName }: { fileUrl: string; fileName: stri
   )
 }
 
+function ReadStatus({ isRead }: { isRead: boolean }) {
+  return isRead
+    ? <CheckCheck size={13} className="text-brand flex-shrink-0" />
+    : <Check size={13} className="text-text-muted flex-shrink-0" />
+}
+
 export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
   const user = useAuthStore(s => s.user)
   const { subscribe, publish, connected } = useWsStore()
@@ -66,17 +72,36 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
     if (history) setMessages(history)
   }, [history])
 
+  // Mark messages as read when chat opens and subscribe to incoming messages
+  useEffect(() => {
+    chatApi.markRead(taskId)
+  }, [taskId])
+
+  // Subscribe to incoming chat messages
   useEffect(() => {
     const unsub = subscribe(`/topic/chat/${taskId}`, (data) => {
       setMessages(prev => {
         const incoming = data as ChatMessageDTO
-        // deduplicate by id (file upload already added it optimistically via ws broadcast)
         if (prev.some(m => m.id === incoming.id)) return prev
         return [...prev, incoming]
       })
+      // Mark as read whenever a new message arrives while chat is open
+      chatApi.markRead(taskId)
     })
     return unsub
   }, [taskId, subscribe])
+
+  // Subscribe to read receipts — update isRead on our own messages
+  useEffect(() => {
+    const unsub = subscribe(`/topic/chat/${taskId}/read`, () => {
+      setMessages(prev =>
+        prev.map(m =>
+          m.senderId === user?.id ? { ...m, isRead: true } : m
+        )
+      )
+    })
+    return unsub
+  }, [taskId, subscribe, user?.id])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -97,7 +122,6 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
     setUploading(true)
     try {
       await chatApi.uploadFile(taskId, file)
-      // message will arrive via WebSocket broadcast
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'Upload failed'
       alert(msg)
@@ -143,7 +167,10 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
                   <p className="leading-relaxed break-words">{msg.messageText}</p>
                 )}
 
-                <p className="text-[10px] text-text-muted mt-1 text-right">{formatTime(msg.created)}</p>
+                <div className="flex items-center justify-end gap-1 mt-1">
+                  <p className="text-[10px] text-text-muted">{formatTime(msg.created)}</p>
+                  {mine && <ReadStatus isRead={msg.isRead} />}
+                </div>
               </div>
             </div>
           )
