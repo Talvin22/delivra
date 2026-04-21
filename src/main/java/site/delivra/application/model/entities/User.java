@@ -82,7 +82,15 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Collection<DeliveryTask> deliveryTasks;
 
+    @Column(name = "truck_gross_weight")
+    private Integer truckGrossWeight;
 
+    @Column(name = "truck_height")
+    private Integer truckHeight;
 
+    @Column(name = "truck_width")
+    private Integer truckWidth;
 
+    @Column(name = "truck_length")
+    private Integer truckLength;
 }

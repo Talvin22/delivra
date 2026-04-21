@@ -12,6 +12,7 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { DriverTaskListPage } from '@/features/driver/DriverTaskListPage'
 import { TaskDetailPage } from '@/features/driver/TaskDetailPage'
 import { NavigationPage } from '@/features/driver/NavigationPage'
+import { TruckProfilePage } from '@/features/driver/TruckProfilePage'
 import { DispatcherPage } from '@/features/dispatcher/DispatcherPage'
 import { AdminLayout } from '@/features/admin/AdminLayout'
 import { AdminDashboard } from '@/features/admin/AdminDashboard'
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
     children: [
       { path: '/driver', element: <DriverTaskListPage /> },
       { path: '/driver/tasks/:id', element: <TaskDetailPage /> },
+      { path: '/driver/truck', element: <TruckProfilePage /> },
     ],
   },
 

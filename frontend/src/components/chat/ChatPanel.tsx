@@ -92,8 +92,10 @@ export function ChatPanel({ taskId, onClose, overlay = false }: Props) {
   }, [taskId, subscribe])
 
   // Subscribe to read receipts — update isRead on our own messages
+  // Only mark as read when the OTHER person reads (readByUserId !== me)
   useEffect(() => {
-    const unsub = subscribe(`/topic/chat/${taskId}/read`, () => {
+    const unsub = subscribe(`/topic/chat/${taskId}/read`, (data: any) => {
+      if (data?.readByUserId === user?.id) return
       setMessages(prev =>
         prev.map(m =>
           m.senderId === user?.id ? { ...m, isRead: true } : m

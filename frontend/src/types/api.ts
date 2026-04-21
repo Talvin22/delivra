@@ -134,6 +134,14 @@ export interface DriverRecommendationDTO {
   hoursSinceLastActivity: number | null
 }
 
+// ─── Truck profile ────────────────────────────────────────────────
+export interface TruckProfileDTO {
+  grossWeight: number | null
+  height: number | null
+  width: number | null
+  length: number | null
+}
+
 // ─── Driver position (local state, from WS) ───────────────────────
 export interface DriverPosition {
   taskId: number

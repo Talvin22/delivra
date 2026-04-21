@@ -1,5 +1,5 @@
 import { api } from './axios'
-import type { DelivraResponse, PaginationResponse, UserDTO, UserSearchDTO } from '@/types/api'
+import type { DelivraResponse, PaginationResponse, TruckProfileDTO, UserDTO, UserSearchDTO } from '@/types/api'
 
 export const usersApi = {
   getAll: (page = 0, limit = 20) =>
@@ -22,4 +22,10 @@ export const usersApi = {
 
   updateRoles: (id: number, roles: string[]) =>
     api.put<DelivraResponse<UserDTO>>(`/users/${id}/roles`, { roles }),
+
+  getTruckProfile: () =>
+    api.get<DelivraResponse<TruckProfileDTO>>('/users/me/truck-profile'),
+
+  updateTruckProfile: (body: TruckProfileDTO) =>
+    api.put<DelivraResponse<TruckProfileDTO>>('/users/me/truck-profile', body),
 }

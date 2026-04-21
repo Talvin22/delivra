@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   MapPin, ListTodo, Users, BarChart3, LogOut,
-  Navigation, Menu, X, MessageSquare, FileDown, Sun, Moon,
+  Navigation, Menu, X, MessageSquare, FileDown, Sun, Moon, Truck,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useWsStore } from '@/store/wsStore'
@@ -17,6 +17,7 @@ function useNavItems(): NavItem[] {
 
   if (role === 'DRIVER') return [
     { to: '/driver', icon: <ListTodo size={20} />, label: 'My Tasks' },
+    { to: '/driver/truck', icon: <Truck size={20} />, label: 'Truck Profile' },
   ]
   if (role === 'DISPATCHER') return [
     { to: '/dispatcher', icon: <MapPin size={20} />, label: 'Map' },

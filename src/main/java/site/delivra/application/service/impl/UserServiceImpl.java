@@ -14,11 +14,13 @@ import site.delivra.application.exception.DataExistException;
 import site.delivra.application.exception.NotFoundException;
 import site.delivra.application.mapper.UserMapper;
 import site.delivra.application.model.constants.ApiErrorMessage;
+import site.delivra.application.model.dto.user.TruckProfileDTO;
 import site.delivra.application.model.dto.user.UserDTO;
 import site.delivra.application.model.dto.user.UserSearchDTO;
 import site.delivra.application.model.entities.Role;
 import site.delivra.application.model.entities.User;
 import site.delivra.application.model.request.user.NewUserRequest;
+import site.delivra.application.model.request.user.UpdateTruckProfileRequest;
 import site.delivra.application.model.request.user.UpdateUserRequest;
 import site.delivra.application.model.request.user.UpdateUserRolesRequest;
 import site.delivra.application.model.request.user.UserSearchRequest;
@@ -191,6 +193,36 @@ public class UserServiceImpl implements UserService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return getUserDetails(email, userRepository);
 
+    }
+
+    @Override
+    public DelivraResponse<TruckProfileDTO> getTruckProfile() {
+        Integer userId = apiUtils.getUserIdFromAuthentication();
+        User user = userRepository.findByIdAndDeletedFalse(userId)
+                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
+        return DelivraResponse.createSuccessful(toTruckProfileDTO(user));
+    }
+
+    @Override
+    public DelivraResponse<TruckProfileDTO> updateTruckProfile(UpdateTruckProfileRequest request) {
+        Integer userId = apiUtils.getUserIdFromAuthentication();
+        User user = userRepository.findByIdAndDeletedFalse(userId)
+                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
+        user.setTruckGrossWeight(request.getGrossWeight());
+        user.setTruckHeight(request.getHeight());
+        user.setTruckWidth(request.getWidth());
+        user.setTruckLength(request.getLength());
+        userRepository.save(user);
+        return DelivraResponse.createSuccessful(toTruckProfileDTO(user));
+    }
+
+    private TruckProfileDTO toTruckProfileDTO(User user) {
+        return TruckProfileDTO.builder()
+                .grossWeight(user.getTruckGrossWeight())
+                .height(user.getTruckHeight())
+                .width(user.getTruckWidth())
+                .length(user.getTruckLength())
+                .build();
     }
 
     static UserDetails getUserDetails(String email, UserRepository userRepository) {

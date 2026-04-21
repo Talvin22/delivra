@@ -4,9 +4,11 @@ package site.delivra.application.service;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import site.delivra.application.model.dto.user.TruckProfileDTO;
 import site.delivra.application.model.dto.user.UserDTO;
 import site.delivra.application.model.dto.user.UserSearchDTO;
 import site.delivra.application.model.request.user.NewUserRequest;
+import site.delivra.application.model.request.user.UpdateTruckProfileRequest;
 import site.delivra.application.model.request.user.UpdateUserRequest;
 import site.delivra.application.model.request.user.UpdateUserRolesRequest;
 import site.delivra.application.model.request.user.UserSearchRequest;
@@ -28,4 +30,8 @@ public interface UserService extends UserDetailsService {
     DelivraResponse<PaginationResponse<UserSearchDTO>> findAllUsers(Pageable pageable);
 
     DelivraResponse<PaginationResponse<UserSearchDTO>> searchUsers(UserSearchRequest userSerachRequest, Pageable pageable);
+
+    DelivraResponse<TruckProfileDTO> getTruckProfile();
+
+    DelivraResponse<TruckProfileDTO> updateTruckProfile(UpdateTruckProfileRequest request);
 }

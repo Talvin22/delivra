@@ -18,8 +18,10 @@ import site.delivra.application.model.enums.DeliveryTaskStatus;
 import site.delivra.application.model.enums.NavigationSessionStatus;
 import site.delivra.application.model.request.navigation.StartNavigationRequest;
 import site.delivra.application.model.response.DelivraResponse;
+import site.delivra.application.model.entities.User;
 import site.delivra.application.repository.DeliveryTaskRepository;
 import site.delivra.application.repository.NavigationSessionRepository;
+import site.delivra.application.repository.UserRepository;
 import site.delivra.application.service.HereApiService;
 import site.delivra.application.service.NavigationService;
 import site.delivra.application.utils.ApiUtils;
@@ -38,6 +40,7 @@ public class NavigationServiceImpl implements NavigationService {
 
     private final NavigationSessionRepository sessionRepository;
     private final DeliveryTaskRepository taskRepository;
+    private final UserRepository userRepository;
     private final HereApiService hereApiService;
     private final ApiUtils apiUtils;
 
@@ -77,13 +80,23 @@ public class NavigationServiceImpl implements NavigationService {
             }
         }
 
+        // Use truck profile from driver's account as fallback if not provided in request
+        User driver = userRepository.findByIdAndDeletedFalse(currentUserId).orElse(null);
+        Integer grossWeight = request.getGrossWeight() != null ? request.getGrossWeight()
+                : (driver != null ? driver.getTruckGrossWeight() : null);
+        Integer height = request.getHeight() != null ? request.getHeight()
+                : (driver != null ? driver.getTruckHeight() : null);
+        Integer width = request.getWidth() != null ? request.getWidth()
+                : (driver != null ? driver.getTruckWidth() : null);
+        Integer length = request.getLength() != null ? request.getLength()
+                : (driver != null ? driver.getTruckLength() : null);
+
         RouteDTO route = null;
         try {
             route = hereApiService.calculateTruckRoute(
                     request.getOriginLatitude(), request.getOriginLongitude(),
                     task.getLatitude(), task.getLongitude(),
-                    request.getGrossWeight(), request.getHeight(),
-                    request.getWidth(), request.getLength()
+                    grossWeight, height, width, length
             );
         } catch (Exception e) {
             log.warn("Route calculation failed for task {}, starting session without route: {}", taskId, e.getMessage());

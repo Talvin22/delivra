@@ -9,9 +9,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import site.delivra.application.model.constants.ApiLogMessage;
+import site.delivra.application.model.dto.user.TruckProfileDTO;
 import site.delivra.application.model.dto.user.UserDTO;
 import site.delivra.application.model.dto.user.UserSearchDTO;
 import site.delivra.application.model.request.user.NewUserRequest;
+import site.delivra.application.model.request.user.UpdateTruckProfileRequest;
 import site.delivra.application.model.request.user.UpdateUserRequest;
 import site.delivra.application.model.request.user.UpdateUserRolesRequest;
 import site.delivra.application.model.request.user.UserSearchRequest;
@@ -88,6 +90,17 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+
+    @GetMapping("/me/truck-profile")
+    public ResponseEntity<DelivraResponse<TruckProfileDTO>> getTruckProfile() {
+        return ResponseEntity.ok(userService.getTruckProfile());
+    }
+
+    @PutMapping("/me/truck-profile")
+    public ResponseEntity<DelivraResponse<TruckProfileDTO>> updateTruckProfile(
+            @RequestBody @Valid UpdateTruckProfileRequest request) {
+        return ResponseEntity.ok(userService.updateTruckProfile(request));
+    }
 
     @PostMapping("/search")
     public ResponseEntity<DelivraResponse<PaginationResponse<UserSearchDTO>>> searchUsers(
