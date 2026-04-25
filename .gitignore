@@ -36,3 +36,6 @@ build/
 src/main/resources/application-local-idea.properties
 src/main/resources/application-local.properties
 .env
+
+### User-uploaded chat files (never commit) ###
+uploads/
