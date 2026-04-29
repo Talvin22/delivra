@@ -1,73 +1,60 @@
-# React + TypeScript + Vite
+# Delivra — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Single-page application for the [Delivra](../README.md) delivery platform. Three role-based UIs (dispatcher, driver, admin) plus a public landing page, all built on React 19 + Vite + Tailwind.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19** + **TypeScript** + **Vite**
+- **Tailwind CSS** + **Radix UI** primitives
+- **React Router** for routing, **Zustand** for client state, **TanStack Query** for server state
+- **React Hook Form** + **Zod** for forms and validation
+- **Leaflet** (`react-leaflet`, `leaflet-rotate`) for the map
+- **STOMP.js** + **Axios** for WebSocket and REST transport
 
-## React Compiler
+## Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` | Start the Vite dev server with HMR (default: <http://localhost:5173>) |
+| `pnpm build` | Type-check and produce a production build in `dist/` |
+| `pnpm preview` | Serve the production build locally |
+| `pnpm lint` | Run ESLint over the project |
 
-## Expanding the ESLint configuration
+## Getting started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
+pnpm dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The dev server expects the backend at <http://localhost:8189>. The backend's `WS_ALLOWED_ORIGINS` must include the frontend origin (default `http://localhost:5173`).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Production build
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+`pnpm build` is invoked automatically by Maven through the `frontend-maven-plugin`, and the resulting `dist/` is copied into the Spring Boot JAR's static resources. You normally don't need to run it by hand — `./mvnw package` from the repo root builds the whole app into a single artifact.
+
+## Structure
+
 ```
+src/
+├── api/            # axios clients per backend domain (auth, tasks, chat, …)
+├── features/
+│   ├── landing/    # public landing page
+│   ├── auth/       # login, register, password reset, email verification
+│   ├── dispatcher/ # task management, driver assignment, chat
+│   ├── driver/     # active task, navigation, chat
+│   ├── admin/      # company moderation, platform stats
+│   └── report/     # Excel exports
+├── components/
+│   ├── ui/         # generic Radix-based primitives
+│   ├── chat/       # message list, composer, file upload
+│   └── layout/     # shells, navigation, role guards
+├── hooks/          # reusable hooks (auth, websocket, geolocation, …)
+├── store/          # Zustand stores
+├── lib/            # helpers (formatters, jwt, query client config)
+└── types/          # shared TypeScript types
+```
+
+## Environment
+
+The dev server's API base URL and WebSocket endpoint are configured in `src/api/axios.ts` and the relevant hooks. If you need to point the SPA at a non-default backend, override the values there or introduce a `.env` with `VITE_*` variables.
